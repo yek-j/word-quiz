@@ -1,4 +1,4 @@
-package com.jyk.wordquiz.wordquiz.entity;
+package com.jyk.wordquiz.wordquiz.model.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
