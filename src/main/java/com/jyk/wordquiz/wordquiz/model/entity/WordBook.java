@@ -33,13 +33,13 @@ public class WordBook {
     private List<Word> words = new ArrayList<>();
 
     // 단어 추가
-    public void addWordBook(Word word) {
+    public void addWord(Word word) {
         words.add(word);
         word.setWordBook(this);
     }
 
     // 단어 제거
-    public void removeWordBook(Word word) {
+    public void removeWord(Word word) {
         words.remove(word);
         word.setWordBook(null);
     }
