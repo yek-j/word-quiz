@@ -57,9 +57,12 @@
 
 ### 단어장 API (WordBooks)
 
-| 엔드포인트 | 메소드    | 설명        | 요청 데이터                       | 인증 | 응답 데이터     |
-|------------|--------|-----------|------------------------------|------|------------|
-| `/api/v1/wordbooks` | POST   | 새 단어장 생성      | name, description    | Authorization 헤더 | 성공 메시지     |
+| 엔드포인트                    | 메소드    | 설명          | 요청 데이터              | 인증 | 응답 데이터     |
+|--------------------------|--------|-------------|---------------------|------|------------|
+| `/api/v1/wordbooks`      | GET    | 사용자의 단어장 목록 | page, sort, orderby | Authorization 헤더 | 단어장 목록     |
+| `/api/v1/wordbooks`      | POST   | 새 단어장 생성    | name, description   | Authorization 헤더 | 성공 메시지     |
+| `/api/v1/wordbooks/{id}` | PUT    | 단어장 수정      | name, description   | Authorization 헤더 | 성공 메시지     |
+| `/api/v1/wordbooks/{id}` | DELETE | 단어장 삭제      | -                   | Authorization 헤더 | 성공 메시지     |
 
 ### 단어 API (Words)
 | 엔드포인트 | 메소드    | 설명    | 요청 데이터            | 인증 | 응답 데이터     |
