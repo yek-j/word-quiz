@@ -1,7 +1,8 @@
 package com.jyk.wordquiz.wordquiz.model.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -10,7 +11,8 @@ import java.util.List;
 
 @Entity
 @Table(name = "wordbooks")
-@Data
+@Getter
+@Setter
 public class WordBook {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

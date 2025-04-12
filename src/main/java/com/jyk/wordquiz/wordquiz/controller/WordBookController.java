@@ -85,11 +85,6 @@ public class WordBookController {
             response.put("message", "단어장을 수정했습니다.");
 
             return ResponseEntity.status(HttpStatus.OK).body(response);
-        }catch(WordBookNotFoundException e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", "error");
-            error.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
         } catch (IllegalAccessException e) {
             Map<String, Object> error = new HashMap<>();
             error.put("status", "error");
@@ -119,11 +114,6 @@ public class WordBookController {
             response.put("message", "단어장을 삭제했습니다.");
 
             return ResponseEntity.status(HttpStatus.OK).body(response);
-        } catch(WordBookNotFoundException e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", "error");
-            error.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
         } catch (EntityNotFoundException e) {
             Map<String, Object> error = new HashMap<>();
             error.put("status", "error");
