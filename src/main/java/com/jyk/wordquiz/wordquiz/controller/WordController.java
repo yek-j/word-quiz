@@ -1,7 +1,9 @@
 package com.jyk.wordquiz.wordquiz.controller;
 
 import com.jyk.wordquiz.wordquiz.model.dto.request.UpdateWordRequest;
+import com.jyk.wordquiz.wordquiz.model.dto.request.WordCheckRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.request.WordRequest;
+import com.jyk.wordquiz.wordquiz.model.dto.response.WordCheckResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.WordsResponse;
 import com.jyk.wordquiz.wordquiz.service.WordService;
 import jakarta.persistence.EntityNotFoundException;
@@ -144,6 +146,38 @@ public class WordController {
             Map<String, Object> error = new HashMap<>();
             error.put("status", "error");
             error.put("message", "단어 삭제 중 오류가 발생했습니다.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
+    @PostMapping("/duplicates")
+    public ResponseEntity<?> duplicateCheck(Authentication authentication,
+                                            @PathVariable Long wordBookId, @RequestBody WordCheckRequest wordCheckReq) {
+        try {
+            String jwtToken = authentication.getCredentials().toString();
+
+            WordCheckResponse result = wordService.wordDuplicateCheck(wordCheckReq, wordBookId, jwtToken);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "success");
+            response.put("message", "단어 중복체크를 완료했습니다.");
+            response.put("result", result);
+
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (EntityNotFoundException e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("status", "error");
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        } catch (AccessDeniedException e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("status", "error");
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+        } catch(Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("status", "error");
+            error.put("message", "단어 중복 체크 중 오류가 발생했습니다.");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }

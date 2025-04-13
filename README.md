@@ -65,9 +65,14 @@
 | `/api/v1/wordbooks/{id}` | DELETE | 단어장 삭제      | -                   | Authorization 헤더 | 성공 메시지     |
 
 ### 단어 API (Words)
-| 엔드포인트                                           | 메소드    | 설명         | 요청 데이터                     | 인증 | 응답 데이터 |
-|-------------------------------------------------|--------|------------|----------------------------|------|--------|
-| `/api/v1/wordbooks/{wordBookId}/words`          | GET    | 단어장의 단어 목록 | page, sort, orderby        | Authorization 헤더 | 단어 목록  |
-| `/api/v1/wordbooks/{wordBookId}/words`          | POST   | 단어 추가      | term, description          | Authorization 헤더 | 성공 메시지 |
-| `/api/v1/wordbooks/{wordBookId}/words/{wordId}` | PUT    | 단어 수정      | 수정할 term, description, 단어장 | Authorization 헤더 | 성공 메시지 |
-| `/api/v1/wordbooks/{wordBookId}/words/{wordId}` | DELETE | 단어 삭제      | -                          | Authorization 헤더 | 성공 메시지 |
+| 엔드포인트                                           | 메소드    | 설명         | 요청 데이터                     | 인증 | 응답 데이터           |
+|-------------------------------------------------|--------|------------|----------------------------|------|------------------|
+| `/api/v1/wordbooks/{wordBookId}/words`          | GET    | 단어장의 단어 목록 | page, sort, orderby        | Authorization 헤더 | 단어 목록            |
+| `/api/v1/wordbooks/{wordBookId}/words`          | POST   | 단어 추가      | term, description          | Authorization 헤더 | 성공 메시지           |
+| `/api/v1/wordbooks/{wordBookId}/words/{wordId}` | PUT    | 단어 수정      | 수정할 term, description, 단어장 | Authorization 헤더 | 성공 메시지           |
+| `/api/v1/wordbooks/{wordBookId}/words/{wordId}` | DELETE | 단어 삭제      | -                          | Authorization 헤더 | 성공 메시지           |
+| `/api/v1/wordbooks/{wordBookId}/words/duplicates` | POST   | 중복 단어 확인   | term                       | Authorization 헤더 | 중복 여부와 중복 단어, 설명 |
+
+### 파일 업로드 API
+| 엔드포인트                                           | 메소드    | 설명         | 요청 데이터                     | 인증 | 응답 데이터           |
+|-------------------------------------------------|--------|------------|----------------------------|------|------------------|

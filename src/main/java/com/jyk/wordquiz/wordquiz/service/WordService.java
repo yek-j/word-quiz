@@ -4,7 +4,9 @@ import com.jyk.wordquiz.wordquiz.common.auth.JwtTokenProvider;
 import com.jyk.wordquiz.wordquiz.common.exception.WordBookNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.exception.WordNotFoundException;
 import com.jyk.wordquiz.wordquiz.model.dto.request.UpdateWordRequest;
+import com.jyk.wordquiz.wordquiz.model.dto.request.WordCheckRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.request.WordRequest;
+import com.jyk.wordquiz.wordquiz.model.dto.response.WordCheckResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.Words;
 import com.jyk.wordquiz.wordquiz.model.dto.response.WordsResponse;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
@@ -26,6 +28,7 @@ import org.springframework.stereotype.Service;
 import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -144,5 +147,26 @@ public class WordService {
         Word word = wordRepository.findByIdAndWordBook(wordId, wordBook).orElseThrow(() -> new WordNotFoundException(wordId));
 
         wordRepository.delete(word);
+    }
+
+    public WordCheckResponse wordDuplicateCheck(WordCheckRequest wordCheckReq, Long wordBookId, String token) throws AccessDeniedException {
+        Long userId = provider.getSubject(token);
+        User user =  userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("사용자 정보를 찾을 수 없습니다. 다시 로그인해 주세요."));
+
+        // 단어장 권한 확인
+        WordBook wordBook = wordBookRepository.findById(wordBookId)
+                .orElseThrow(() -> new WordBookNotFoundException(wordBookId));
+
+        if(!wordBook.getCreatedBy().equals(user)) {
+            throw new AccessDeniedException("이 단어장에 대한 접근 권한이 없습니다.");
+        }
+
+        Optional<Word> word = wordRepository.findByTermAndWordBook(wordCheckReq.getTerm(), wordBook);
+
+        if(word.isPresent()) {
+            Word dupleWord = word.get();
+            return new WordCheckResponse(true, dupleWord.getTerm(), dupleWord.getDescription());
+        }
+        return new WordCheckResponse(false, "", "");
     }
 }

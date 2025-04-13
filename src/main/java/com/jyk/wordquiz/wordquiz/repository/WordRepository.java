@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface WordRepository extends JpaRepository<Word, Long> {
     Page<Word> findByWordBook(WordBook wordBook, Pageable pageable);
     Optional<Word> findByIdAndWordBook(Long id, WordBook wordBook);
+    Optional<Word> findByTermAndWordBook(String term, WordBook wordBook);
 }
