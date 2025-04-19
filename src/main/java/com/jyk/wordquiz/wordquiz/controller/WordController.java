@@ -1,20 +1,30 @@
 package com.jyk.wordquiz.wordquiz.controller;
 
+import com.jyk.wordquiz.wordquiz.common.excel.UploadExcel;
+import com.jyk.wordquiz.wordquiz.common.exception.DuplicationWordException;
 import com.jyk.wordquiz.wordquiz.model.dto.request.UpdateWordRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.request.WordCheckRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.request.WordRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.WordCheckResponse;
+import com.jyk.wordquiz.wordquiz.model.dto.response.Words;
 import com.jyk.wordquiz.wordquiz.model.dto.response.WordsResponse;
 import com.jyk.wordquiz.wordquiz.service.WordService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -70,6 +80,11 @@ public class WordController {
             response.put("message", "단어를 저장했습니다.");
 
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (DuplicationWordException e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("status", "duplication");
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
         } catch(EntityNotFoundException e) {
             Map<String, Object> error = new HashMap<>();
             error.put("status", "error");
@@ -156,7 +171,7 @@ public class WordController {
         try {
             String jwtToken = authentication.getCredentials().toString();
 
-            WordCheckResponse result = wordService.wordDuplicateCheck(wordCheckReq, wordBookId, jwtToken);
+            WordCheckResponse result = wordService.wordCheck(wordCheckReq, wordBookId, jwtToken);
 
             Map<String, Object> response = new HashMap<>();
             response.put("status", "success");
@@ -180,5 +195,49 @@ public class WordController {
             error.put("message", "단어 중복 체크 중 오류가 발생했습니다.");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
+    }
+
+    @PostMapping("/file")
+    public ResponseEntity<?> UploadWordFile(Authentication authentication,
+                                            @PathVariable Long wordBookId, @RequestParam("file") MultipartFile file) {
+        try {
+            String jwtToken = authentication.getCredentials().toString();
+            Map<String, String> words = UploadExcel.uploadWordExcel(file);
+
+            List<Words> existingWord = wordService.saveExcelData(words, wordBookId,jwtToken);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "success");
+            response.put("message", "단어 저장을 완료했습니다.");
+            response.put("existingWord", existingWord);
+
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (EntityNotFoundException e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("status", "error");
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        } catch (AccessDeniedException e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("status", "error");
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("status", "error");
+            error.put("message", "파일 업로드 중 오류가 발생했습니다.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
+    @GetMapping("/template")
+    public ResponseEntity<Resource> downloadTemplate() throws IOException {
+        Resource resource = new ClassPathResource("static/templates/word-import-template.xlsx");
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"word-template.xlsx\"")
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .contentLength(resource.contentLength())
+                .body(resource);
     }
 }

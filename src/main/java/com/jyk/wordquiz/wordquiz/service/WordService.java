@@ -1,6 +1,7 @@
 package com.jyk.wordquiz.wordquiz.service;
 
 import com.jyk.wordquiz.wordquiz.common.auth.JwtTokenProvider;
+import com.jyk.wordquiz.wordquiz.common.exception.DuplicationWordException;
 import com.jyk.wordquiz.wordquiz.common.exception.WordBookNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.exception.WordNotFoundException;
 import com.jyk.wordquiz.wordquiz.model.dto.request.UpdateWordRequest;
@@ -26,9 +27,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.AccessDeniedException;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -85,6 +84,13 @@ public class WordService {
 
         if(!wordBook.getCreatedBy().equals(user)) {
             throw new AccessDeniedException("이 단어장에 대한 접근 권한이 없습니다.");
+        }
+
+        // 중복 검증
+        Word duplcheck = wordDuplication(wordReq.getTerm(), wordBook);
+
+        if(duplcheck != null) {
+            throw new DuplicationWordException(duplcheck.getTerm(), duplcheck.getDescription());
         }
 
         // 단어
@@ -149,7 +155,7 @@ public class WordService {
         wordRepository.delete(word);
     }
 
-    public WordCheckResponse wordDuplicateCheck(WordCheckRequest wordCheckReq, Long wordBookId, String token) throws AccessDeniedException {
+    public WordCheckResponse wordCheck(WordCheckRequest wordCheckReq, Long wordBookId, String token) throws AccessDeniedException {
         Long userId = provider.getSubject(token);
         User user =  userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("사용자 정보를 찾을 수 없습니다. 다시 로그인해 주세요."));
 
@@ -161,12 +167,56 @@ public class WordService {
             throw new AccessDeniedException("이 단어장에 대한 접근 권한이 없습니다.");
         }
 
-        Optional<Word> word = wordRepository.findByTermAndWordBook(wordCheckReq.getTerm(), wordBook);
-
-        if(word.isPresent()) {
-            Word dupleWord = word.get();
-            return new WordCheckResponse(true, dupleWord.getTerm(), dupleWord.getDescription());
+        Word word = wordDuplication(wordCheckReq.getTerm(), wordBook);
+        if(word != null) {
+            return new WordCheckResponse(true, word.getTerm(), word.getDescription());
         }
+
         return new WordCheckResponse(false, "", "");
+    }
+
+    private Word wordDuplication(String term, WordBook wordBook) {
+        Optional<Word> word = wordRepository.findByTermAndWordBook(term, wordBook);
+
+        return word.orElse(null);
+    }
+
+    @Transactional
+    public List<Words> saveExcelData(Map<String, String> words, Long wordBookId, String token) throws AccessDeniedException {
+        Long userId = provider.getSubject(token);
+        User user =  userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("사용자 정보를 찾을 수 없습니다. 다시 로그인해 주세요."));
+
+        // 단어장 권한 확인
+        WordBook wordBook = wordBookRepository.findById(wordBookId)
+                .orElseThrow(() -> new WordBookNotFoundException(wordBookId));
+
+        if(!wordBook.getCreatedBy().equals(user)) {
+            throw new AccessDeniedException("이 단어장에 대한 접근 권한이 없습니다.");
+        }
+
+        List<Word> newWords = new ArrayList<>();
+        List<Words> dupleWords = new ArrayList<>();
+
+        for(String term : words.keySet()) {
+            Word duplWord = wordDuplication(term, wordBook);
+
+            if (duplWord != null) {
+                dupleWords.add(new Words(duplWord.getId(), duplWord.getTerm(), duplWord.getDescription(), duplWord.getCreatedAt()));
+                continue;
+            }
+            Word newWord = new Word();
+            newWord.setTerm(term);
+            newWord.setDescription(words.get(term));
+            newWord.setWordBook(wordBook);
+            newWords.add(newWord);
+        }
+
+        wordRepository.saveAll(newWords);
+
+        if (!dupleWords.isEmpty()) {
+            return dupleWords;
+        }
+
+        return null;
     }
 }
