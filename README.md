@@ -2,15 +2,29 @@
 
 ## 엔티티 관계도 (ERD)
 ```
-+-------------+       +--------------+       +-------------+
-|    User     |       |   WordBook   |       |    Word     |
-+-------------+       +--------------+       +-------------+
-| PK id       |<----->| PK id        |<----->| PK id       |
-| username    |       | name         |       | term        |
-| email       |       | description  |       | description |
-| password    |       | createdBy(FK)|       | wordBookId  |
-| createdAt   |       | createdAt    |       | createdAt   |
-+-------------+       +--------------+       +-------------+
++-------------+       +-------------+       +----------------+       +--------------+
+|    User     |<----->|    Quiz     |<----->| QuizWordBook   |<----->|  WordBook    |
++-------------+       +-------------+       +----------------+       +--------------+
+| PK id       |       | PK id       |       | PK id          |       | PK id        |
+| username    |       | name        |       | quizId(FK)     |       | name         |
+| email       |       | description |       | wordBookId(FK) |       | description  |
+| password    |       | sharingStatus|      +----------------+       | createdBy(FK)|
+| createdAt   |       | createdBy(FK)|                               | createdAt    |
++-------------+       | createdAt   |                                +--------------+
+       ^              +-------------+                                     ^
+       |                     ^                                            |
+       |                     |                                            |
+       |              +-------------+       +----------------+            |
+       +------------->| QuizSession |<----->|  QuizAnswer    |------------+
+                      +-------------+       +----------------+       +-------------+
+                      | PK id       |       | PK id          |<----->|    Word     |
+                      | quizId(FK)  |       | sessionId(FK)  |       +-------------+
+                      | userId(FK)  |       | wordId(FK)     |       | PK id       |
+                      | score       |       | isCorrect      |       | term        |
+                      | attemptedAt |       +----------------+       | description |
+                      +-------------+                                | wordBookId  |
+                                                                     | createdAt   |
+                                                                     +-------------+
 ```
 
 ## 테이블 상세 정의
@@ -41,6 +55,40 @@
 | term        | VARCHAR(100)  | String          | NOT NULL               | 단어           |
 | description | TEXT          | String          | NOT NULL               | 단어 의미/정의  |
 | createdAt   | DATETIME      | LocalDateTime   | NOT NULL               | 생성시간        |
+
+### Quiz (퀴즈)
+| 필드명        | MySQL 타입    | Java 타입       | 제약조건                | 설명           |
+|---------------|---------------|-----------------|-------------------------|----------------|
+| id            | BIGINT        | Long            | PK, AUTO_INCREMENT     | 고유 식별자     |
+| name          | VARCHAR(100)  | String          | UNIQUE, NOT NULL       | 퀴즈 이름       |
+| sharingStatus | VARCHAR(20)   | Enum            | NOT NULL, DEFAULT 'PUBLIC' | 공유 상태    |
+| description   | TEXT  | String          | NULL                   | 퀴즈 설명       |
+| createdBy     | BIGINT        | Long            | FK (User.id), NOT NULL | 생성한 사용자   |
+| createdAt     | DATETIME      | LocalDateTime   | NOT NULL, DEFAULT CURRENT_TIMESTAMP | 생성 시간 |
+
+### QuizWordBook (퀴즈-단어장 연결)
+| 필드명      | MySQL 타입    | Java 타입       | 제약조건                | 설명           |
+|-------------|---------------|-----------------|-------------------------|----------------|
+| id          | BIGINT        | Long            | PK, AUTO_INCREMENT     | 고유 식별자     |
+| quizId      | BIGINT        | Long            | FK (Quiz.id), NOT NULL | 퀴즈 ID        |
+| wordBookId  | BIGINT        | Long            | FK (WordBook.id), NOT NULL | 단어장 ID   |
+
+### QuizSession (퀴즈 세션)
+| 필드명      | MySQL 타입    | Java 타입       | 제약조건                | 설명           |
+|-------------|---------------|-----------------|-------------------------|----------------|
+| id          | BIGINT        | Long            | PK, AUTO_INCREMENT     | 고유 식별자     |
+| quizId      | BIGINT        | Long            | FK (Quiz.id), NOT NULL | 퀴즈 ID        |
+| userId      | BIGINT        | Long            | FK (User.id), NOT NULL | 사용자 ID      |
+| score       | INT           | Integer         | NOT NULL, DEFAULT 0    | 점수           |
+| attemptedAt | DATETIME      | LocalDateTime   | NOT NULL, DEFAULT CURRENT_TIMESTAMP | 시도 시간 |
+
+### QuizAnswer (퀴즈 답변)
+| 필드명        | MySQL 타입    | Java 타입       | 제약조건                | 설명           |
+|---------------|---------------|-----------------|-------------------------|----------------|
+| id            | BIGINT        | Long            | PK, AUTO_INCREMENT     | 고유 식별자     |
+| quizSessionId | BIGINT        | Long            | FK (QuizSession.id), NOT NULL | 퀴즈 세션 ID |
+| wordId        | BIGINT        | Long            | FK (Word.id), NOT NULL | 단어 ID        |
+| isCorrect     | BIT(1)       | Boolean         | NULL                   | 정답 여부       |
 
 ## API EndPoint
 

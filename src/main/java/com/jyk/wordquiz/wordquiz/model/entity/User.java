@@ -33,6 +33,12 @@ public class User {
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WordBook> wordBooks = new ArrayList<>();
 
+    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Quiz> quizzes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user")
+    private List<QuizSession> quizSessions = new ArrayList<>();
+
     // 단어장 추가
     public void addWordBook(WordBook wordBook) {
         wordBooks.add(wordBook);
@@ -43,5 +49,17 @@ public class User {
     public void removeWordBook(WordBook wordBook) {
         wordBooks.remove(wordBook);
         wordBook.setCreatedBy(null);
+    }
+
+    // 퀴즈 추가
+    public void addQuiz(Quiz quiz) {
+        quizzes.add(quiz);
+        quiz.setCreatedBy(this);
+    }
+
+    // 퀴즈 제거
+    public void removeQuiz(Quiz quiz) {
+        quizzes.remove(quiz);
+        quiz.setCreatedBy(null);
     }
 }

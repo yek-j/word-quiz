@@ -34,6 +34,9 @@ public class WordBook {
     @OneToMany(mappedBy = "wordBook", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Word> words = new ArrayList<>();
 
+    @OneToMany(mappedBy = "wordBook")
+    private List<QuizWordBook> quizWordBooks = new ArrayList<>();
+
     // 단어 추가
     public void addWord(Word word) {
         words.add(word);
@@ -44,5 +47,10 @@ public class WordBook {
     public void removeWord(Word word) {
         words.remove(word);
         word.setWordBook(null);
+    }
+
+    // 단어장이 퀴즈에서 사용 중인지 확인
+    public boolean isUsedInQuizzes() {
+        return !this.quizWordBooks.isEmpty();
     }
 }
