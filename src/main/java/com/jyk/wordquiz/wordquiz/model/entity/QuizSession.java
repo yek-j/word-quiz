@@ -28,6 +28,9 @@ public class QuizSession {
     @Column(nullable = false)
     private int score = 0;
 
+    @Column(nullable = false)
+    private boolean isQuizActive;
+
     @Column(name = "attempted_at", nullable = false, updatable = false)
     @CreationTimestamp
     private LocalDateTime attemptedAt;

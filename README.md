@@ -10,7 +10,7 @@
 | email       |       | description |       | wordBookId(FK) |       | description  |
 | password    |       | sharingStatus|      +----------------+       | createdBy(FK)|
 | createdAt   |       | createdBy(FK)|                               | createdAt    |
-+-------------+       | createdAt   |                                +--------------+
++-------------+       | createdAt   |                               +--------------+
        ^              +-------------+                                     ^
        |                     ^                                            |
        |                     |                                            |
@@ -21,10 +21,11 @@
                       | quizId(FK)  |       | sessionId(FK)  |       +-------------+
                       | userId(FK)  |       | wordId(FK)     |       | PK id       |
                       | score       |       | isCorrect      |       | term        |
-                      | attemptedAt |       +----------------+       | description |
-                      +-------------+                                | wordBookId  |
-                                                                     | createdAt   |
-                                                                     +-------------+
+                      | isQuizActive|       +----------------+       | description |
+                      | attemptedAt |                               | wordBookId  |
+                      +-------------+                               | createdAt   |
+                                                                    +-------------+
+                                                                     
 ```
 
 ## 테이블 상세 정의
@@ -74,13 +75,14 @@
 | wordBookId  | BIGINT        | Long            | FK (WordBook.id), NOT NULL | 단어장 ID   |
 
 ### QuizSession (퀴즈 세션)
-| 필드명      | MySQL 타입    | Java 타입       | 제약조건                | 설명           |
-|-------------|---------------|-----------------|-------------------------|----------------|
-| id          | BIGINT        | Long            | PK, AUTO_INCREMENT     | 고유 식별자     |
-| quizId      | BIGINT        | Long            | FK (Quiz.id), NOT NULL | 퀴즈 ID        |
-| userId      | BIGINT        | Long            | FK (User.id), NOT NULL | 사용자 ID      |
-| score       | INT           | Integer         | NOT NULL, DEFAULT 0    | 점수           |
-| attemptedAt | DATETIME      | LocalDateTime   | NOT NULL, DEFAULT CURRENT_TIMESTAMP | 시도 시간 |
+| 필드명               | MySQL 타입 | Java 타입       | 제약조건                | 설명       |
+|-------------------|----------|-----------------|-------------------------|----------|
+| id                | BIGINT   | Long            | PK, AUTO_INCREMENT     | 고유 식별자   |
+| quizId            | BIGINT   | Long            | FK (Quiz.id), NOT NULL | 퀴즈 ID    |
+| userId            | BIGINT   | Long            | FK (User.id), NOT NULL | 사용자 ID   |
+| score             | INT      | Integer         | NOT NULL, DEFAULT 0    | 점수       |
+| isQuizActive | BIT(1)   | Boolean         | NOT NULL   | 퀴즈 진행 여부 |
+| attemptedAt       | DATETIME | LocalDateTime   | NOT NULL, DEFAULT CURRENT_TIMESTAMP | 시도 시간    |
 
 ### QuizAnswer (퀴즈 답변)
 | 필드명        | MySQL 타입    | Java 타입       | 제약조건                | 설명           |
