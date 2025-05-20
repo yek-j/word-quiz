@@ -1,11 +1,9 @@
 package com.jyk.wordquiz.wordquiz.controller;
 
-import com.jyk.wordquiz.wordquiz.common.exception.WordBookNotFoundException;
 import com.jyk.wordquiz.wordquiz.model.dto.request.WordBookRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.WordBooksResponse;
 import com.jyk.wordquiz.wordquiz.service.WordBookService;
 import jakarta.persistence.EntityNotFoundException;
-import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
