@@ -1,6 +1,7 @@
 package com.jyk.wordquiz.wordquiz.service;
 
 import com.jyk.wordquiz.wordquiz.common.auth.JwtTokenProvider;
+import com.jyk.wordquiz.wordquiz.common.exception.AuthenticatedUserNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.exception.WordBookNotFoundException;
 import com.jyk.wordquiz.wordquiz.model.dto.request.WordBookRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.WordBooks;
@@ -33,7 +34,7 @@ public class WordBookService {
 
     public WordBooksResponse getWordBooks(String token, int page, String criteria, String sort) {
         Long userId = provider.getSubject(token);
-        User user =  userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("사용자 정보를 찾을 수 없습니다. 다시 로그인해 주세요."));
+        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
 
         Sort.Direction direction = Sort.Direction.DESC;
 
@@ -58,7 +59,7 @@ public class WordBookService {
     @Transactional
     public void saveWordBook(WordBookRequest wordBookReq, String token) {
         Long userId = provider.getSubject(token);
-        User user =  userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("사용자 정보를 찾을 수 없습니다. 다시 로그인해 주세요."));
+        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
 
         WordBook newWordBook = new WordBook();
         newWordBook.setName(wordBookReq.getName());
@@ -72,7 +73,7 @@ public class WordBookService {
     @Transactional
     public void updateWordBook(Long id, WordBookRequest wordBookReq, String token) throws IllegalAccessException {
         Long userId = provider.getSubject(token);
-        User user =  userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("사용자 정보를 찾을 수 없습니다. 다시 로그인해 주세요."));
+        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
 
         WordBook wordBook = wordBookRepository.findByIdAndCreatedBy(id, user).orElseThrow(() -> new WordBookNotFoundException(id));
 
@@ -89,7 +90,7 @@ public class WordBookService {
     @Transactional
     public void deleteWordBook(Long id, String token) {
         Long userId = provider.getSubject(token);
-        User user =  userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("사용자 정보를 찾을 수 없습니다. 다시 로그인해 주세요."));
+        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
 
         WordBook wordBook = wordBookRepository.findByIdAndCreatedBy(id, user).orElseThrow(() -> new WordBookNotFoundException(id));
 
