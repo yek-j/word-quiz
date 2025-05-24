@@ -1,6 +1,7 @@
 package com.jyk.wordquiz.wordquiz.controller;
 
 import com.jyk.wordquiz.wordquiz.common.excel.UploadExcel;
+import com.jyk.wordquiz.wordquiz.common.exception.AuthenticatedUserNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.exception.DuplicationWordException;
 import com.jyk.wordquiz.wordquiz.model.dto.request.UpdateWordRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.request.WordCheckRequest;
@@ -9,7 +10,7 @@ import com.jyk.wordquiz.wordquiz.model.dto.response.WordCheckResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.Words;
 import com.jyk.wordquiz.wordquiz.model.dto.response.WordsResponse;
 import com.jyk.wordquiz.wordquiz.service.WordService;
-import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -29,6 +30,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/wordbooks/{wordBookId}/words")
+@Slf4j
 public class WordController {
     @Autowired
     private WordService wordService;
@@ -49,12 +51,13 @@ public class WordController {
             response.put("result", result);
 
             return ResponseEntity.status(HttpStatus.OK).body(response);
-        } catch (EntityNotFoundException e) {
+        } catch (AuthenticatedUserNotFoundException e) {
             Map<String, Object> error = new HashMap<>();
             error.put("status", "error");
-            error.put("message", e.getMessage());
+            error.put("message", "세션 정보를 확인할 수 없습니다. 보안을 위해 다시 로그인해주세요.");
+            log.error("인증된 사용자를 찾을 수 없음 - 심각한 무결성 오류. userId: {}", e.getUserId());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
-        } catch (AccessDeniedException e) {
+        }  catch (AccessDeniedException e) {
             Map<String, Object> error = new HashMap<>();
             error.put("status", "error");
             error.put("message", e.getMessage());
@@ -85,12 +88,13 @@ public class WordController {
             error.put("status", "duplication");
             error.put("message", e.getMessage());
             return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
-        } catch(EntityNotFoundException e) {
+        } catch (AuthenticatedUserNotFoundException e) {
             Map<String, Object> error = new HashMap<>();
             error.put("status", "error");
-            error.put("message", e.getMessage());
+            error.put("message", "세션 정보를 확인할 수 없습니다. 보안을 위해 다시 로그인해주세요.");
+            log.error("인증된 사용자를 찾을 수 없음 - 심각한 무결성 오류. userId: {}", e.getUserId());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
-        } catch (AccessDeniedException e) {
+        }  catch (AccessDeniedException e) {
             Map<String, Object> error = new HashMap<>();
             error.put("status", "error");
             error.put("message", e.getMessage());
@@ -116,12 +120,13 @@ public class WordController {
             response.put("message", "단어를 수정했습니다.");
 
             return ResponseEntity.status(HttpStatus.OK).body(response);
-        } catch (EntityNotFoundException e) {
+        } catch (AuthenticatedUserNotFoundException e) {
             Map<String, Object> error = new HashMap<>();
             error.put("status", "error");
-            error.put("message", e.getMessage());
+            error.put("message", "세션 정보를 확인할 수 없습니다. 보안을 위해 다시 로그인해주세요.");
+            log.error("인증된 사용자를 찾을 수 없음 - 심각한 무결성 오류. userId: {}", e.getUserId());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
-        } catch (AccessDeniedException e) {
+        }  catch (AccessDeniedException e) {
             Map<String, Object> error = new HashMap<>();
             error.put("status", "error");
             error.put("message", e.getMessage());
@@ -147,12 +152,13 @@ public class WordController {
             response.put("message", "단어를 삭제했습니다.");
 
             return ResponseEntity.status(HttpStatus.OK).body(response);
-        } catch (EntityNotFoundException e) {
+        } catch (AuthenticatedUserNotFoundException e) {
             Map<String, Object> error = new HashMap<>();
             error.put("status", "error");
-            error.put("message", e.getMessage());
+            error.put("message", "세션 정보를 확인할 수 없습니다. 보안을 위해 다시 로그인해주세요.");
+            log.error("인증된 사용자를 찾을 수 없음 - 심각한 무결성 오류. userId: {}", e.getUserId());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
-        } catch (AccessDeniedException e) {
+        }  catch (AccessDeniedException e) {
             Map<String, Object> error = new HashMap<>();
             error.put("status", "error");
             error.put("message", e.getMessage());
@@ -179,12 +185,13 @@ public class WordController {
             response.put("result", result);
 
             return ResponseEntity.status(HttpStatus.OK).body(response);
-        } catch (EntityNotFoundException e) {
+        } catch (AuthenticatedUserNotFoundException e) {
             Map<String, Object> error = new HashMap<>();
             error.put("status", "error");
-            error.put("message", e.getMessage());
+            error.put("message", "세션 정보를 확인할 수 없습니다. 보안을 위해 다시 로그인해주세요.");
+            log.error("인증된 사용자를 찾을 수 없음 - 심각한 무결성 오류. userId: {}", e.getUserId());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
-        } catch (AccessDeniedException e) {
+        }  catch (AccessDeniedException e) {
             Map<String, Object> error = new HashMap<>();
             error.put("status", "error");
             error.put("message", e.getMessage());
@@ -212,12 +219,13 @@ public class WordController {
             response.put("existingWord", existingWord);
 
             return ResponseEntity.status(HttpStatus.OK).body(response);
-        } catch (EntityNotFoundException e) {
+        } catch (AuthenticatedUserNotFoundException e) {
             Map<String, Object> error = new HashMap<>();
             error.put("status", "error");
-            error.put("message", e.getMessage());
+            error.put("message", "세션 정보를 확인할 수 없습니다. 보안을 위해 다시 로그인해주세요.");
+            log.error("인증된 사용자를 찾을 수 없음 - 심각한 무결성 오류. userId: {}", e.getUserId());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
-        } catch (AccessDeniedException e) {
+        }  catch (AccessDeniedException e) {
             Map<String, Object> error = new HashMap<>();
             error.put("status", "error");
             error.put("message", e.getMessage());

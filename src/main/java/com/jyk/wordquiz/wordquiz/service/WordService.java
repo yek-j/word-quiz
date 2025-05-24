@@ -1,6 +1,7 @@
 package com.jyk.wordquiz.wordquiz.service;
 
 import com.jyk.wordquiz.wordquiz.common.auth.JwtTokenProvider;
+import com.jyk.wordquiz.wordquiz.common.exception.AuthenticatedUserNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.exception.DuplicationWordException;
 import com.jyk.wordquiz.wordquiz.common.exception.WordBookNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.exception.WordNotFoundException;
@@ -43,7 +44,7 @@ public class WordService {
 
     public WordsResponse getWords(Long wordBookId, String token, int page, String criteria, String sort) throws AccessDeniedException {
         Long userId = provider.getSubject(token);
-        User user =  userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("사용자 정보를 찾을 수 없습니다. 다시 로그인해 주세요."));
+        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
 
         Sort.Direction direction = Sort.Direction.DESC;
 
@@ -76,7 +77,7 @@ public class WordService {
     @Transactional
     public void saveWord(Long wordBookId, WordRequest wordReq, String token) throws AccessDeniedException {
         Long userId = provider.getSubject(token);
-        User user =  userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("사용자 정보를 찾을 수 없습니다. 다시 로그인해 주세요."));
+        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
 
         // 단어장
         WordBook wordBook = wordBookRepository.findById(wordBookId)
@@ -106,7 +107,7 @@ public class WordService {
     @Transactional
     public void updateWord(Long wordBookId, Long wordId, UpdateWordRequest updateWordReq, String token) throws AccessDeniedException {
         Long userId = provider.getSubject(token);
-        User user =  userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("사용자 정보를 찾을 수 없습니다. 다시 로그인해 주세요."));
+        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
 
         // 단어장 권한 확인
         WordBook wordBook = wordBookRepository.findById(wordBookId)
@@ -140,7 +141,7 @@ public class WordService {
 
     public void deleteWord(Long wordBookId, Long wordId, String token) throws AccessDeniedException {
         Long userId = provider.getSubject(token);
-        User user =  userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("사용자 정보를 찾을 수 없습니다. 다시 로그인해 주세요."));
+        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
 
         // 단어장 권한 확인
         WordBook wordBook = wordBookRepository.findById(wordBookId)
@@ -157,7 +158,7 @@ public class WordService {
 
     public WordCheckResponse wordCheck(WordCheckRequest wordCheckReq, Long wordBookId, String token) throws AccessDeniedException {
         Long userId = provider.getSubject(token);
-        User user =  userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("사용자 정보를 찾을 수 없습니다. 다시 로그인해 주세요."));
+        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
 
         // 단어장 권한 확인
         WordBook wordBook = wordBookRepository.findById(wordBookId)
@@ -184,7 +185,7 @@ public class WordService {
     @Transactional
     public List<Words> saveExcelData(Map<String, String> words, Long wordBookId, String token) throws AccessDeniedException {
         Long userId = provider.getSubject(token);
-        User user =  userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("사용자 정보를 찾을 수 없습니다. 다시 로그인해 주세요."));
+        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
 
         // 단어장 권한 확인
         WordBook wordBook = wordBookRepository.findById(wordBookId)
