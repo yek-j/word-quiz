@@ -70,14 +70,14 @@ public class WordBookService {
     }
 
     @Transactional
-    public void updateWordBook(Long id, WordBookRequest wordBookReq, String token) throws IllegalAccessException {
+    public void updateWordBook(Long id, WordBookRequest wordBookReq, String token) {
         Long userId = provider.getSubject(token);
         User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
 
         WordBook wordBook = wordBookRepository.findByIdAndCreatedBy(id, user).orElseThrow(() -> new WordBookNotFoundException(id));
 
         if(wordBookReq.getName().isEmpty()) {
-            throw new IllegalAccessException("단어장의 이름이 비어있습니다.");
+            throw new IllegalArgumentException("단어장의 이름이 비어있습니다.");
         }
 
         wordBook.setName(wordBookReq.getName());

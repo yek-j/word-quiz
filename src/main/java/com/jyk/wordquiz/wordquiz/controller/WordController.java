@@ -40,202 +40,89 @@ public class WordController {
                                          @PathVariable Long wordBookId,
                                          @RequestParam(required = false, defaultValue = "0", value = "page") int page,
                                          @RequestParam(required = false, defaultValue = "id", value = "orderby") String criteria,
-                                         @RequestParam(required= false, defaultValue = "DESC", value = "sort") String sort) {
-        try {
-            String jwtToken = authentication.getCredentials().toString();
-            WordsResponse result = wordService.getWords(wordBookId, jwtToken, page, criteria, sort.toUpperCase());
+                                         @RequestParam(required= false, defaultValue = "DESC", value = "sort") String sort) throws AccessDeniedException {
+        String jwtToken = authentication.getCredentials().toString();
+        WordsResponse result = wordService.getWords(wordBookId, jwtToken, page, criteria, sort.toUpperCase());
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "success");
-            response.put("message", "단어 리스트를 불러왔습니다.");
-            response.put("result", result);
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "단어 리스트를 불러왔습니다.");
+        response.put("result", result);
 
-            return ResponseEntity.status(HttpStatus.OK).body(response);
-        } catch (AuthenticatedUserNotFoundException e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", "error");
-            error.put("message", "세션 정보를 확인할 수 없습니다. 보안을 위해 다시 로그인해주세요.");
-            log.error("인증된 사용자를 찾을 수 없음 - 심각한 무결성 오류. userId: {}", e.getUserId());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
-        }  catch (AccessDeniedException e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", "error");
-            error.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
-        } catch (Exception e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", "error");
-            error.put("message", "단어 리스트를 불러오는 중 오류가 발생했습니다.");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-        }
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @PostMapping
     public ResponseEntity<?> addWord(Authentication authentication,
-                                     @PathVariable Long wordBookId, @RequestBody WordRequest wordReq) {
-        try {
-            String jwtToken = authentication.getCredentials().toString();
+                                     @PathVariable Long wordBookId, @RequestBody WordRequest wordReq) throws AccessDeniedException {
+        String jwtToken = authentication.getCredentials().toString();
 
-            wordService.saveWord(wordBookId, wordReq, jwtToken);
+        wordService.saveWord(wordBookId, wordReq, jwtToken);
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "success");
-            response.put("message", "단어를 저장했습니다.");
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "단어를 저장했습니다.");
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (DuplicationWordException e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", "duplication");
-            error.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
-        } catch (AuthenticatedUserNotFoundException e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", "error");
-            error.put("message", "세션 정보를 확인할 수 없습니다. 보안을 위해 다시 로그인해주세요.");
-            log.error("인증된 사용자를 찾을 수 없음 - 심각한 무결성 오류. userId: {}", e.getUserId());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
-        }  catch (AccessDeniedException e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", "error");
-            error.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
-        } catch (Exception e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", "error");
-            error.put("message", "단어 저장 중 오류가 발생했습니다.");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PutMapping("/{wordId}")
     public ResponseEntity<?> putWord(Authentication authentication,
                                      @PathVariable Long wordBookId, @PathVariable Long wordId,
-                                     @RequestBody UpdateWordRequest updateWordReq) {
-        try {
-            String jwtToken = authentication.getCredentials().toString();
-            wordService.updateWord(wordBookId, wordId, updateWordReq, jwtToken);
+                                     @RequestBody UpdateWordRequest updateWordReq) throws AccessDeniedException {
+        String jwtToken = authentication.getCredentials().toString();
+        wordService.updateWord(wordBookId, wordId, updateWordReq, jwtToken);
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "success");
-            response.put("message", "단어를 수정했습니다.");
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "단어를 수정했습니다.");
 
-            return ResponseEntity.status(HttpStatus.OK).body(response);
-        } catch (AuthenticatedUserNotFoundException e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", "error");
-            error.put("message", "세션 정보를 확인할 수 없습니다. 보안을 위해 다시 로그인해주세요.");
-            log.error("인증된 사용자를 찾을 수 없음 - 심각한 무결성 오류. userId: {}", e.getUserId());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
-        }  catch (AccessDeniedException e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", "error");
-            error.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
-        } catch(Exception e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", "error");
-            error.put("message", "단어 수정 중 오류가 발생했습니다.");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-        }
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @DeleteMapping("/{wordId}")
     public ResponseEntity<?> delWord(Authentication authentication,
-                                     @PathVariable Long wordBookId, @PathVariable Long wordId) {
-        try {
-            String jwtToken = authentication.getCredentials().toString();
+                                     @PathVariable Long wordBookId, @PathVariable Long wordId) throws AccessDeniedException {
+        String jwtToken = authentication.getCredentials().toString();
 
-            wordService.deleteWord(wordBookId, wordId, jwtToken);
+        wordService.deleteWord(wordBookId, wordId, jwtToken);
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "success");
-            response.put("message", "단어를 삭제했습니다.");
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "단어를 삭제했습니다.");
 
-            return ResponseEntity.status(HttpStatus.OK).body(response);
-        } catch (AuthenticatedUserNotFoundException e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", "error");
-            error.put("message", "세션 정보를 확인할 수 없습니다. 보안을 위해 다시 로그인해주세요.");
-            log.error("인증된 사용자를 찾을 수 없음 - 심각한 무결성 오류. userId: {}", e.getUserId());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
-        }  catch (AccessDeniedException e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", "error");
-            error.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
-        } catch(Exception e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", "error");
-            error.put("message", "단어 삭제 중 오류가 발생했습니다.");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-        }
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @PostMapping("/duplicates")
     public ResponseEntity<?> duplicateCheck(Authentication authentication,
-                                            @PathVariable Long wordBookId, @RequestBody WordCheckRequest wordCheckReq) {
-        try {
-            String jwtToken = authentication.getCredentials().toString();
+                                            @PathVariable Long wordBookId, @RequestBody WordCheckRequest wordCheckReq) throws AccessDeniedException {
+        String jwtToken = authentication.getCredentials().toString();
 
-            WordCheckResponse result = wordService.wordCheck(wordCheckReq, wordBookId, jwtToken);
+        WordCheckResponse result = wordService.wordCheck(wordCheckReq, wordBookId, jwtToken);
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "success");
-            response.put("message", "단어 중복체크를 완료했습니다.");
-            response.put("result", result);
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "단어 중복체크를 완료했습니다.");
+        response.put("result", result);
 
-            return ResponseEntity.status(HttpStatus.OK).body(response);
-        } catch (AuthenticatedUserNotFoundException e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", "error");
-            error.put("message", "세션 정보를 확인할 수 없습니다. 보안을 위해 다시 로그인해주세요.");
-            log.error("인증된 사용자를 찾을 수 없음 - 심각한 무결성 오류. userId: {}", e.getUserId());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
-        }  catch (AccessDeniedException e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", "error");
-            error.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
-        } catch(Exception e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", "error");
-            error.put("message", "단어 중복 체크 중 오류가 발생했습니다.");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-        }
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @PostMapping("/file")
     public ResponseEntity<?> UploadWordFile(Authentication authentication,
-                                            @PathVariable Long wordBookId, @RequestParam("file") MultipartFile file) {
-        try {
-            String jwtToken = authentication.getCredentials().toString();
-            Map<String, String> words = UploadExcel.uploadWordExcel(file);
+                                            @PathVariable Long wordBookId, @RequestParam("file") MultipartFile file) throws IOException {
+        String jwtToken = authentication.getCredentials().toString();
+        Map<String, String> words = UploadExcel.uploadWordExcel(file);
 
-            List<Words> existingWord = wordService.saveExcelData(words, wordBookId,jwtToken);
+        List<Words> existingWord = wordService.saveExcelData(words, wordBookId,jwtToken);
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "success");
-            response.put("message", "단어 저장을 완료했습니다.");
-            response.put("existingWord", existingWord);
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "단어 저장을 완료했습니다.");
+        response.put("existingWord", existingWord);
 
-            return ResponseEntity.status(HttpStatus.OK).body(response);
-        } catch (AuthenticatedUserNotFoundException e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", "error");
-            error.put("message", "세션 정보를 확인할 수 없습니다. 보안을 위해 다시 로그인해주세요.");
-            log.error("인증된 사용자를 찾을 수 없음 - 심각한 무결성 오류. userId: {}", e.getUserId());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
-        }  catch (AccessDeniedException e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", "error");
-            error.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
-        } catch (Exception e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", "error");
-            error.put("message", "파일 업로드 중 오류가 발생했습니다.");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-        }
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @GetMapping("/template")

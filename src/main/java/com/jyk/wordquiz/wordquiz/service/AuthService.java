@@ -1,6 +1,7 @@
 package com.jyk.wordquiz.wordquiz.service;
 
 import com.jyk.wordquiz.wordquiz.common.auth.JwtTokenProvider;
+import com.jyk.wordquiz.wordquiz.common.exception.AuthenticatedUserNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.exception.DuplicateUserException;
 import com.jyk.wordquiz.wordquiz.model.dto.request.ChangePwd;
 import com.jyk.wordquiz.wordquiz.model.dto.request.DeleteAccountRequest;
@@ -42,7 +43,7 @@ public class AuthService {
         }
     }
 
-    public LoginResponse login(LoginRequest loginReq) throws Exception{
+    public LoginResponse login(LoginRequest loginReq){
         Optional<User> findUser = userRepository.findByEmail(loginReq.getEmail());
 
         if(findUser.isEmpty()) {
@@ -61,18 +62,16 @@ public class AuthService {
                 .build();
     }
 
-    public UserInfoResponse getUserInfo(String token) throws Exception {
-        Long id = provider.getSubject(token);
-        Optional<User> findUser = userRepository.findById(id);
-        User user = findUser.orElseThrow(Exception::new);
+    public UserInfoResponse getUserInfo(String token){
+        Long userId = provider.getSubject(token);
+        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
         return new UserInfoResponse(user.getUsername(), user.getEmail());
     }
 
     @Transactional
-    public void changePassword(String token, ChangePwd changePwd) throws Exception{
-        Long id = provider.getSubject(token);
-        Optional<User> findUser = userRepository.findById(id);
-        User user = findUser.orElseThrow(Exception::new);
+    public void changePassword(String token, ChangePwd changePwd){
+        Long userId = provider.getSubject(token);
+        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
 
         if(!passwordEncoder.matches(changePwd.getCurrentPassword(), user.getPassword())) {
             throw new BadCredentialsException("비밀번호가 일치하지 않습니다.");
@@ -84,10 +83,9 @@ public class AuthService {
     }
 
     @Transactional
-    public void deleteUser(String token, DeleteAccountRequest deleteReq) throws Exception {
-        Long id = provider.getSubject(token);
-        Optional<User> findUser = userRepository.findById(id);
-        User user = findUser.orElseThrow(Exception::new);
+    public void deleteUser(String token, DeleteAccountRequest deleteReq) {
+        Long userId = provider.getSubject(token);
+        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
 
         if(!passwordEncoder.matches(deleteReq.getPassword(), user.getPassword())) {
             throw new BadCredentialsException("비밀번호가 일치하지 않습니다.");
