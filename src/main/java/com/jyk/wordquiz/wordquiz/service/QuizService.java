@@ -2,20 +2,29 @@ package com.jyk.wordquiz.wordquiz.service;
 
 import com.jyk.wordquiz.wordquiz.common.auth.JwtTokenProvider;
 import com.jyk.wordquiz.wordquiz.common.exception.AuthenticatedUserNotFoundException;
+import com.jyk.wordquiz.wordquiz.common.type.SharingStatus;
 import com.jyk.wordquiz.wordquiz.model.dto.request.CreateQuizRequest;
+import com.jyk.wordquiz.wordquiz.model.dto.response.Quizzes;
 import com.jyk.wordquiz.wordquiz.model.dto.response.QuizzesResponse;
 import com.jyk.wordquiz.wordquiz.model.entity.Quiz;
+import com.jyk.wordquiz.wordquiz.model.entity.QuizSession;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.model.entity.WordBook;
 import com.jyk.wordquiz.wordquiz.repository.QuizRepository;
+import com.jyk.wordquiz.wordquiz.repository.QuizSessionRepository;
 import com.jyk.wordquiz.wordquiz.repository.UserRepository;
 import com.jyk.wordquiz.wordquiz.repository.WordBookRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class QuizService {
@@ -25,6 +34,8 @@ public class QuizService {
     private UserRepository userRepository;
     @Autowired
     private WordBookRepository wordBookRepository;
+    @Autowired
+    private QuizSessionRepository quizSessionRepository;
     @Autowired
     private JwtTokenProvider provider;
 
@@ -68,16 +79,61 @@ public class QuizService {
     }
 
     /**
-     * TODO: 조건에 따라 퀴즈 리스트 가져오기
-     * @param token
-     * @param page
-     * @param criteria
-     * @param sort
-     * @param kind 
-     * @return
+     * 퀴즈 리스트 가져오기
+     * TODO: 세션 생성 후 테스트
+     * @param token: jwt token
+     * @param page: page 값
+     * @param criteria: orderby
+     * @param sort: DESC, ASC
+     * @param kind: 공유된 모든 퀴즈보기(ALL), 자신의 퀴즈만 보기(MY)
+     * @return : QuizzesResponse
      */
     public QuizzesResponse getQuizList(String token, int page, String criteria, String sort, String kind) {
-       return null;
+        Long userId = provider.getSubject(token);
+        User user = userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
+
+        Sort.Direction direction = Sort.Direction.DESC;
+
+        if(sort.equals("ASC")) {
+            direction = Sort.Direction.ASC;
+        }
+
+        Pageable pageReq = PageRequest.of(page, 10, Sort.by(direction, criteria));
+
+        Page<Quiz> findQuizzes = null;
+
+        if(kind.equals("MY")) findQuizzes = quizRepository.findByUser(user, pageReq);
+        else if(kind.equals("ALL")) findQuizzes = quizRepository.findBySharingStatusOrMy(SharingStatus.PUBLIC, user, pageReq);
+        // TODO: FRIENDS
+
+        Page<Quizzes> pageQuizzes = Objects.requireNonNull(findQuizzes).map(q -> new Quizzes(
+                q.getId(), q.getName(), q.getDescription(), q.getCreatedBy().getUsername(), q.getCreatedAt()
+        ));
+
+        int totalPages = pageQuizzes.getTotalPages();
+        List<Quizzes> quizzes = pageQuizzes.getContent();
+
+        // QuizSession 확인
+        List<Long> quizIds = new ArrayList<>();
+        for(Quizzes quiz : quizzes) {
+            quizIds.add(quiz.getId());
+        }
+
+        if(!quizIds.isEmpty()) {
+            List<QuizSession> quizSessions = quizSessionRepository.findLatestSessionsByUserAndQuizIds(userId, quizIds);
+
+            Map<Long, Boolean> activeStatusMap = quizSessions.stream()
+                    .collect(Collectors.toMap(
+                            session -> session.getQuiz().getId(),
+                            QuizSession::isQuizActive
+                    ));
+
+            for(Quizzes quiz : quizzes) {
+                quiz.setQuizActive(activeStatusMap.getOrDefault(quiz.getId(), false));
+            }
+        }
+
+        return new QuizzesResponse(quizzes, totalPages);
     }
 
     /**
