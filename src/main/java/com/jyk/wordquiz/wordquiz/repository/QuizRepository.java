@@ -9,8 +9,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
+
 public interface QuizRepository extends JpaRepository<Quiz, Long> {
-    Page<Quiz> findByUser(User user, Pageable pageable);
+    Page<Quiz> findByCreatedBy(User user, Pageable pageable);
+
+    Optional<Quiz> findByCreatedByAndId(User user, Long id);
 
     @Query("SELECT q FROM Quiz q WHERE q.createdBy = :user OR (q.sharingStatus = :status AND q.createdBy != :user)")
     Page<Quiz> findBySharingStatusOrMy(@Param("status") SharingStatus status, @Param("user") User user, Pageable pageable);

@@ -6,7 +6,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class CreateQuizRequest {
+public class QuizParamRequest {
     private String name;
     private String description;
     private String wordBookIds;

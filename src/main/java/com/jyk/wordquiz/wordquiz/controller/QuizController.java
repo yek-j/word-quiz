@@ -1,10 +1,8 @@
 package com.jyk.wordquiz.wordquiz.controller;
 
-import com.jyk.wordquiz.wordquiz.common.exception.AuthenticatedUserNotFoundException;
-import com.jyk.wordquiz.wordquiz.model.dto.request.CreateQuizRequest;
+import com.jyk.wordquiz.wordquiz.model.dto.request.QuizParamRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.QuizzesResponse;
 import com.jyk.wordquiz.wordquiz.service.QuizService;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -23,9 +21,9 @@ public class QuizController {
     private QuizService quizService;
 
     @PostMapping
-    public ResponseEntity<?> createQuiz(Authentication authentication, @RequestBody CreateQuizRequest createQuizRequest) {
+    public ResponseEntity<?> createQuiz(Authentication authentication, @RequestBody QuizParamRequest quizParamRequest) {
         String jwtToken = authentication.getCredentials().toString();
-        quizService.createQuiz(jwtToken, createQuizRequest);
+        quizService.createQuiz(jwtToken, quizParamRequest);
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");
@@ -48,5 +46,31 @@ public class QuizController {
         response.put("result", result);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PutMapping("/{quizId}")
+    public ResponseEntity<?> updateQuiz(Authentication authentication, @PathVariable Long quizId, @RequestBody QuizParamRequest quizParamRequest) {
+        String jwtToken = authentication.getCredentials().toString();
+
+        quizService.updateQuiz(jwtToken, quizId, quizParamRequest);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "퀴즈 수정을 성공했습니다.");
+
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{quizId}")
+    public ResponseEntity<?> deleteQuiz(Authentication authentication, @PathVariable Long quizId) {
+        String jwtToken = authentication.getCredentials().toString();
+
+        quizService.deleteQuiz(jwtToken, quizId);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "퀴즈 삭제를 성공했습니다.");
+
+        return ResponseEntity.ok(response);
     }
 }
