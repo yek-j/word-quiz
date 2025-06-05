@@ -1,5 +1,6 @@
 package com.jyk.wordquiz.wordquiz.model.entity;
 
+import com.jyk.wordquiz.wordquiz.common.type.QuizType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,6 +31,10 @@ public class QuizSession {
 
     @Column(nullable = false)
     private boolean isQuizActive;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, name = "quiz_type")
+    private QuizType quizType = QuizType.MEANING_TO_WORD;
 
     @Column(name = "attempted_at", nullable = false, updatable = false)
     @CreationTimestamp

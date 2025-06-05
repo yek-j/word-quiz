@@ -22,7 +22,7 @@ public class Quiz {
     private String name;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, name = "sharing_status", columnDefinition = "VARCHAR(20) DEFAULT 'PUBLIC'")
+    @Column(nullable = false, name = "sharing_status")
     private SharingStatus sharingStatus = SharingStatus.PUBLIC;
 
     @Column(nullable = true, columnDefinition = "TEXT")

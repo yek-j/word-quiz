@@ -20,12 +20,11 @@
                       | PK id       |       | PK id          |<----->|    Word     |
                       | quizId(FK)  |       | sessionId(FK)  |       +-------------+
                       | userId(FK)  |       | wordId(FK)     |       | PK id       |
-                      | score       |       | isCorrect      |       | term        |
-                      | isQuizActive|       +----------------+       | description |
-                      | attemptedAt |                               | wordBookId  |
-                      +-------------+                               | createdAt   |
-                                                                    +-------------+
-                                                                     
+                      | quizType    |       | isCorrect      |       | term        |
+                      | score       |       +----------------+       | description |
+                      | isQuizActive|                                | wordBookId  |
+                      | attemptedAt |                                | createdAt   |
+                      +-------------+                                +-------------+                                                                     
 ```
 
 ## 테이블 상세 정의
@@ -75,14 +74,15 @@
 | wordBookId  | BIGINT        | Long            | FK (WordBook.id), NOT NULL | 단어장 ID   |
 
 ### QuizSession (퀴즈 세션)
-| 필드명               | MySQL 타입 | Java 타입       | 제약조건                | 설명       |
-|-------------------|----------|-----------------|-------------------------|----------|
-| id                | BIGINT   | Long            | PK, AUTO_INCREMENT     | 고유 식별자   |
-| quizId            | BIGINT   | Long            | FK (Quiz.id), NOT NULL | 퀴즈 ID    |
-| userId            | BIGINT   | Long            | FK (User.id), NOT NULL | 사용자 ID   |
-| score             | INT      | Integer         | NOT NULL, DEFAULT 0    | 점수       |
-| isQuizActive | BIT(1)   | Boolean         | NOT NULL   | 퀴즈 진행 여부 |
-| attemptedAt       | DATETIME | LocalDateTime   | NOT NULL, DEFAULT CURRENT_TIMESTAMP | 시도 시간    |
+| 필드명               | MySQL 타입 | Java 타입       | 제약조건                                | 설명       |
+|-------------------|----------|---------------|-------------------------------------|----------|
+| id                | BIGINT   | Long          | PK, AUTO_INCREMENT                  | 고유 식별자   |
+| quizId            | BIGINT   | Long          | FK (Quiz.id), NOT NULL              | 퀴즈 ID    |
+| userId            | BIGINT   | Long          | FK (User.id), NOT NULL              | 사용자 ID   |
+| score             | INT      | Integer       | NOT NULL, DEFAULT 0                 | 점수       |
+| quizType | VARCHAR(20)    | Enum          | NOT NULL,  DEFAULT 'MEANING_TO_WORD' | 퀴즈 유형    |
+| isQuizActive | BIT(1)   | Boolean       | NOT NULL                            | 퀴즈 진행 여부 |
+| attemptedAt       | DATETIME | LocalDateTime | NOT NULL, DEFAULT CURRENT_TIMESTAMP | 시도 시간    |
 
 ### QuizAnswer (퀴즈 답변)
 | 필드명        | MySQL 타입    | Java 타입       | 제약조건                | 설명           |
@@ -126,9 +126,10 @@
 | `/api/v1/wordbooks/{wordBookId}/words/template` | GET    | 단어 입력 템플릿 다운로드   | -                          | Authorization 헤더                | 템플릿(업로드 예시) 파일   |
 
 ### 퀴즈 API (Words)
-| 엔드포인트                      | 메소드    | 설명         | 요청 데이터                                          | 인증               | 응답 데이터 |
-|----------------------------|--------|------------|-------------------------------------------------|------------------|--------|
-| `/api/v1/quizzes`          | POST   | 퀴즈 생성 | name, description, WorkBook List, sharingStatus | Authorization 헤더 | 성공 메시지 |
+| 엔드포인트                      | 메소드    | 설명       | 요청 데이터                                          | 인증               | 응답 데이터 |
+|----------------------------|--------|----------|-------------------------------------------------|------------------|--------|
+| `/api/v1/quizzes`          | POST   | 퀴즈 생성    | name, description, WorkBook List, sharingStatus | Authorization 헤더 | 성공 메시지 |
 | `/api/v1/quizzes`          | GET    | 퀴즈 목록 조회 | page, sort, orderby, kind                       | Authorization 헤더 | 퀴즈 목록  |
-| `/api/v1/quizzes/{quizId}` | PUT    | 퀴즈 수정 | name, description, WorkBook List, sharingStatus | Authorization 헤더 | 성공 메시지  |
-| `/api/v1/quizzes/{quizId}` | DELETE | 퀴즈 삭제 | -                                               | Authorization 헤더 | 성공 메시지  |
+| `/api/v1/quizzes/{quizId}` | PUT    | 퀴즈 수정    | name, description, WorkBook List, sharingStatus | Authorization 헤더 | 성공 메시지  |
+| `/api/v1/quizzes/{quizId}` | DELETE | 퀴즈 삭제    | -                                               | Authorization 헤더 | 성공 메시지  |
+| `/api/v1/quiz-session`     | POST   | 퀴즈 시작    | quiz-id, quiz-type                              | Authorization 헤더 | 성공 메시지  |
