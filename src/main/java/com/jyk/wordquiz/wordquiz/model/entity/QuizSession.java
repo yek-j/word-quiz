@@ -41,10 +41,10 @@ public class QuizSession {
     private LocalDateTime attemptedAt;
 
     @OneToMany(mappedBy = "quizSession", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<QuizAnswer> quizAnswers = new ArrayList<>();
+    private List<QuizQuestion> quizQuestions = new ArrayList<>();
 
-    public void addAnswer(QuizAnswer answer) {
-        quizAnswers.add(answer);
-        answer.setQuizSession(this);
+    public void addQuestion(QuizQuestion question) {
+        quizQuestions.add(question);
+        question.setQuizSession(this);
     }
 }

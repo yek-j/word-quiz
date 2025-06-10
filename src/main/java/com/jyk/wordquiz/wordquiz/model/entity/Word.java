@@ -32,6 +32,6 @@ public class Word {
     private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "word")
-    private List<QuizAnswer> quizAnswers = new ArrayList<>();
+    private List<QuizQuestion> quizQuestions = new ArrayList<>();
 
 }
