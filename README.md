@@ -1,34 +1,6 @@
 #  WordQuiz App (단어장)
 
-## 엔티티 관계도 (ERD)
-```
-+-------------+       +-------------+       +----------------+       +--------------+
-|    User     |<----->|    Quiz     |<----->| QuizWordBook   |<----->|  WordBook    |
-+-------------+       +-------------+       +----------------+       +--------------+
-| PK id       |       | PK id       |       | PK id          |       | PK id        |
-| username    |       | name        |       | quizId(FK)     |       | name         |
-| email       |       | description |       | wordBookId(FK) |       | description  |
-| password    |       | sharingStatus|      +----------------+       | createdBy(FK)|
-| createdAt   |       | createdBy(FK)|                               | createdAt    |
-+-------------+       | createdAt   |                               +--------------+
-       ^              +-------------+                                     ^
-       |                     ^                                            |
-       |                     |                                            |
-       |              +-------------+       +----------------+            |
-       +------------->| QuizSession |<----->|  QuizAnswer    |------------+
-                      +-------------+       +----------------+       +-------------+
-                      | PK id       |       | PK id          |<----->|    Word     |
-                      | quizId(FK)  |       | sessionId(FK)  |       +-------------+
-                      | userId(FK)  |       | wordId(FK)     |       | PK id       |
-                      | quizType    |       | isCorrect      |       | term        |
-                      | score       |       +----------------+       | description |
-                      | isQuizActive|                                | wordBookId  |
-                      | attemptedAt |                                | createdAt   |
-                      +-------------+                                +-------------+                                                                     
-```
-
 ## 테이블 상세 정의
-
 ### Users (사용자)
 | 필드명    | MySQL 타입    | Java 타입       | 제약조건                | 설명           |
 |-----------|---------------|-----------------|-------------------------|----------------|
@@ -84,13 +56,14 @@
 | isQuizActive | BIT(1)   | Boolean       | NOT NULL                            | 퀴즈 진행 여부 |
 | attemptedAt       | DATETIME | LocalDateTime | NOT NULL, DEFAULT CURRENT_TIMESTAMP | 시도 시간    |
 
-### QuizAnswer (퀴즈 답변)
-| 필드명        | MySQL 타입    | Java 타입       | 제약조건                | 설명           |
-|---------------|---------------|-----------------|-------------------------|----------------|
-| id            | BIGINT        | Long            | PK, AUTO_INCREMENT     | 고유 식별자     |
-| quizSessionId | BIGINT        | Long            | FK (QuizSession.id), NOT NULL | 퀴즈 세션 ID |
-| wordId        | BIGINT        | Long            | FK (Word.id), NOT NULL | 단어 ID        |
-| isCorrect     | BIT(1)       | Boolean         | NULL                   | 정답 여부       |
+### QuizQuestion (퀴즈 문제 메타데이터)
+| 필드명              | MySQL 타입 | Java 타입 | 제약조건     | 설명       |
+|------------------|----------|---------|-----------|----------|
+| id               | BIGINT   | Long    | PK, AUTO_INCREMENT | 고유 식별자   |
+| quizSessionId    | BIGINT   | Long    | FK (QuizSession.id), NOT NULL | 퀴즈 세션 ID |
+| wordId           | BIGINT   | Long    | FK (Word.id), NOT NULL | 단어 ID    |
+| questionQuestion | Int      | int     | NOT NULL | 단어 순서    |
+| isCorrect        | BIT(1)   | Boolean | NULL     | 정답 여부    |
 
 ## API EndPoint
 
