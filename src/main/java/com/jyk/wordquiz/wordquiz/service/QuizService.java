@@ -17,6 +17,7 @@ import com.jyk.wordquiz.wordquiz.repository.UserRepository;
 import com.jyk.wordquiz.wordquiz.repository.WordBookRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,6 +29,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class QuizService {
     @Autowired
     private QuizRepository quizRepository;
@@ -106,6 +108,10 @@ public class QuizService {
         if(kind.equals("MY")) findQuizzes = quizRepository.findByCreatedBy(user, pageReq);
         else if(kind.equals("ALL")) findQuizzes = quizRepository.findBySharingStatusOrMy(SharingStatus.PUBLIC, user, pageReq);
         // TODO: FRIENDS
+
+        if(findQuizzes == null) {
+            return new QuizzesResponse(null, 0);
+        }
 
         Page<Quizzes> pageQuizzes = Objects.requireNonNull(findQuizzes).map(q -> new Quizzes(
                 q.getId(), q.getName(), q.getDescription(), q.getCreatedBy().getUsername(), q.getCreatedAt()

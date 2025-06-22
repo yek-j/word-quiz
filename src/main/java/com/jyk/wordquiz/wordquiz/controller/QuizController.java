@@ -35,7 +35,7 @@ public class QuizController {
     public ResponseEntity<?> getQuizList(Authentication authentication, @RequestParam(required = false, defaultValue = "0", value = "page") int page,
                                          @RequestParam(required = false, defaultValue = "id", value = "orderby") String criteria,
                                          @RequestParam(required= false, defaultValue = "DESC", value = "sort") String sort,
-                                         @RequestParam(required = false, defaultValue = "all", value = "kind") String kind) {
+                                         @RequestParam(required = false, defaultValue = "ALL", value = "kind") String kind) {
         
         String jwtToken = authentication.getCredentials().toString();
         QuizzesResponse result = quizService.getQuizList(jwtToken, page, criteria, sort.toUpperCase(), kind);
