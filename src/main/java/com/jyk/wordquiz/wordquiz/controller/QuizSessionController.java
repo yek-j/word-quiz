@@ -1,5 +1,6 @@
 package com.jyk.wordquiz.wordquiz.controller;
 
+import com.jyk.wordquiz.wordquiz.model.dto.request.QuizAnswerRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.request.QuizStartRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.QuizSessionResponse;
 import com.jyk.wordquiz.wordquiz.service.QuizSessionService;
@@ -32,5 +33,14 @@ public class QuizSessionController {
         response.put("result", result);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PostMapping("/{sessionId}/answer")
+    public ResponseEntity<?> answerQuiz(Authentication authentication, @RequestBody QuizAnswerRequest quizAnswerReq) {
+        String jwtToken = authentication.getCredentials().toString();
+
+        //TODO:
+
+        return null;
     }
 }

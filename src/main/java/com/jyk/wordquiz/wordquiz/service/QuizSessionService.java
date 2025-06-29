@@ -5,7 +5,9 @@ import com.jyk.wordquiz.wordquiz.common.exception.AuthenticatedUserNotFoundExcep
 import com.jyk.wordquiz.wordquiz.common.exception.QuizNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.type.QuizType;
 import com.jyk.wordquiz.wordquiz.common.type.SharingStatus;
+import com.jyk.wordquiz.wordquiz.model.dto.request.QuizAnswerRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.request.QuizStartRequest;
+import com.jyk.wordquiz.wordquiz.model.dto.response.QuizAnswerResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.QuizProblem;
 import com.jyk.wordquiz.wordquiz.model.dto.response.QuizSessionResponse;
 import com.jyk.wordquiz.wordquiz.model.entity.*;
@@ -96,5 +98,11 @@ public class QuizSessionService {
         Long sessionId = savedSession.getId();
 
         return new QuizSessionResponse(sessionId, problemList, quizStartReq.getQuizType());
+    }
+
+    @Transactional
+    public QuizAnswerResponse getIsCorrect(String token, QuizAnswerRequest quizAnswerReq) {
+        // TODO:
+        return null;
     }
 }
