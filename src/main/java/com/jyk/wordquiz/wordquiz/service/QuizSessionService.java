@@ -65,7 +65,9 @@ public class QuizSessionService {
                     a = word.getDescription();
                 }
 
-                activeProblems.add(new QuizProblem(p, a, q.getIsCorrect()));
+                // 채점되지 않은 답은 보여주지 않는다.
+                String displayAnswer = (q.getIsCorrect() != null) ? a : null;
+                activeProblems.add(new QuizProblem(p, displayAnswer, q.getIsCorrect()));
             }
 
             return new QuizSessionResponse(activeSession.get().getId(), activeProblems, activeSession.get().getQuizType());
@@ -113,11 +115,11 @@ public class QuizSessionService {
             quizSession.addQuestion(question);
 
             String problem = w.getDescription();
-            String answer = w.getTerm();
+            String answer = null;
 
             if(quizStartReq.getQuizType() == QuizType.WORD_TO_MEANING) {
                 problem = w.getTerm();
-                answer = w.getDescription();
+                answer = null;
             }
 
             QuizProblem qp = new QuizProblem(problem, answer, null);
@@ -139,6 +141,10 @@ public class QuizSessionService {
      */
     @Transactional
     public QuizAnswerResponse getIsCorrect(String token, QuizAnswerRequest quizAnswerReq) {
+        // 사용자 가져오기
+
+
+
         return null;
     }
 }
