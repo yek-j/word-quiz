@@ -18,9 +18,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class QuizSessionService {
@@ -33,6 +31,13 @@ public class QuizSessionService {
     @Autowired
     private QuizSessionRepository quizSessionRepository;
 
+    /**
+     * 퀴즈 시작으로 신규 세션 생성
+     * 아직 완료하지 않은 퀴즈면 기존 세션 정보 반환
+     * @param token: jwt 토큰
+     * @param quizStartReq: 퀴즈 시작을 위한 정보
+     * @return 퀴즈 세션 정보
+     */
     @Transactional
     public QuizSessionResponse startQuiz(String token, QuizStartRequest quizStartReq) {
         Long userId = provider.getSubject(token);
@@ -40,6 +45,31 @@ public class QuizSessionService {
 
         // 시작하려는 퀴즈 가져오기
         Quiz quiz = quizRepository.findById(quizStartReq.getQuizId()).orElseThrow(() -> new QuizNotFoundException(quizStartReq.getQuizId()));
+
+        // 기존 세션이 있다면 사용하기
+        Optional<QuizSession> activeSession = quizSessionRepository.findByUserAndQuizAndIsQuizActive(user, quiz, true);
+
+        if(activeSession.isPresent()) {
+            List<QuizQuestion> activeQusetions = activeSession.get().getQuizQuestions();
+            activeQusetions.sort(Comparator.comparing(QuizQuestion::getQuestionOrder));
+
+            List<QuizProblem> activeProblems = new ArrayList<>();
+            for(QuizQuestion q : activeQusetions) {
+                Word word = q.getWord();
+
+                String p = word.getDescription();
+                String a = word.getTerm();
+
+                if(quizStartReq.getQuizType() == QuizType.WORD_TO_MEANING) {
+                    p = word.getTerm();
+                    a = word.getDescription();
+                }
+
+                activeProblems.add(new QuizProblem(p, a, q.getIsCorrect()));
+            }
+
+            return new QuizSessionResponse(activeSession.get().getId(), activeProblems, activeSession.get().getQuizType());
+        }
 
         // 본인이 만들었거나 PUBLIC 퀴즈인지 확인
         if(!quiz.getCreatedBy().equals(user) && quiz.getSharingStatus() != SharingStatus.PUBLIC) {
@@ -63,6 +93,7 @@ public class QuizSessionService {
         List<Word> selectedWords = words.subList(0, Math.min(20, words.size()));
 
         List<QuizProblem> problemList = new ArrayList<>();
+
 
         // QuizSession 생성
         QuizSession quizSession = new QuizSession();
@@ -100,9 +131,14 @@ public class QuizSessionService {
         return new QuizSessionResponse(sessionId, problemList, quizStartReq.getQuizType());
     }
 
+    /**
+     * TODO: 답변 제출 후 정답에 대한 결과를 DB에 저장하고 결과를 반환한다.
+     * @param token
+     * @param quizAnswerReq
+     * @return
+     */
     @Transactional
     public QuizAnswerResponse getIsCorrect(String token, QuizAnswerRequest quizAnswerReq) {
-        // TODO:
         return null;
     }
 }

@@ -83,7 +83,6 @@ public class QuizService {
 
     /**
      * 퀴즈 리스트 가져오기
-     * TODO: 세션 생성 후 테스트
      * @param token: jwt token
      * @param page: page 값
      * @param criteria: orderby
