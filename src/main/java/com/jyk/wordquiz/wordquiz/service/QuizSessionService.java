@@ -3,6 +3,7 @@ package com.jyk.wordquiz.wordquiz.service;
 import com.jyk.wordquiz.wordquiz.common.auth.JwtTokenProvider;
 import com.jyk.wordquiz.wordquiz.common.exception.AuthenticatedUserNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.exception.QuizNotFoundException;
+import com.jyk.wordquiz.wordquiz.common.exception.QuizSessionNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.type.QuizType;
 import com.jyk.wordquiz.wordquiz.common.type.SharingStatus;
 import com.jyk.wordquiz.wordquiz.model.dto.request.QuizAnswerRequest;
@@ -30,6 +31,9 @@ public class QuizSessionService {
     private QuizRepository quizRepository;
     @Autowired
     private QuizSessionRepository quizSessionRepository;
+
+    private static final String KEY_ANSWER = "Answer";
+    private static final String KEY_CORRECT = "Correct";
 
     /**
      * 퀴즈 시작으로 신규 세션 생성
@@ -67,7 +71,7 @@ public class QuizSessionService {
 
                 // 채점되지 않은 답은 보여주지 않는다.
                 String displayAnswer = (q.getIsCorrect() != null) ? a : null;
-                activeProblems.add(new QuizProblem(p, displayAnswer, q.getIsCorrect()));
+                activeProblems.add(new QuizProblem(word.getId(), p, displayAnswer, q.getIsCorrect()));
             }
 
             return new QuizSessionResponse(activeSession.get().getId(), activeProblems, activeSession.get().getQuizType());
@@ -122,7 +126,7 @@ public class QuizSessionService {
                 answer = null;
             }
 
-            QuizProblem qp = new QuizProblem(problem, answer, null);
+            QuizProblem qp = new QuizProblem(w.getId(), problem, answer, null);
             problemList.add(qp);
         }
 
@@ -135,16 +139,49 @@ public class QuizSessionService {
 
     /**
      * TODO: 답변 제출 후 정답에 대한 결과를 DB에 저장하고 결과를 반환한다.
-     * @param token
-     * @param quizAnswerReq
-     * @return
+     * @param token: jwt token
+     * @param sessionId: QuizSession Id
+     * @param quizAnswerReq: 사용자 정답
+     * @return QuizAnswerResponse
      */
     @Transactional
-    public QuizAnswerResponse getIsCorrect(String token, QuizAnswerRequest quizAnswerReq) {
-        // 사용자 가져오기
+    public QuizAnswerResponse getIsCorrect(String token, Long sessionId, QuizAnswerRequest quizAnswerReq) {
+        Long userId = provider.getSubject(token);
+        User user = userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
 
+        // 퀴즈 세션 가져오기
+        QuizSession quizSession = quizSessionRepository.findByIdAndUser(sessionId, user).orElseThrow(() -> new QuizSessionNotFoundException(sessionId));
 
+        QuizAnswerResponse quizAnswerResponse = new QuizAnswerResponse();
+        quizAnswerResponse.setWordId(quizAnswerReq.getWordId());
 
-        return null;
+        // 퀴즈 타입 확인 후 정답 확인
+        List<QuizQuestion> quizQuestions = quizSession.getQuizQuestions();
+        HashMap<String, Object> result = validateAndSaveAnswer(quizQuestions, quizAnswerReq, quizSession.getQuizType());
+
+        quizAnswerResponse.setCorrectAnswer(result.get(KEY_ANSWER).toString());
+        quizAnswerResponse.setCorrect(Boolean.parseBoolean(result.get(KEY_CORRECT ).toString()));
+
+        return quizAnswerResponse;
+    }
+
+    private HashMap<String, Object> validateAndSaveAnswer(List<QuizQuestion> quizQuestions, QuizAnswerRequest quizAnswerReq, QuizType quizType) {
+        Boolean isCorrect = null;
+        HashMap<String, Object> answerAndCorrect = new HashMap<>();
+
+        for (QuizQuestion q : quizQuestions) {
+            if (Objects.equals(q.getWord().getId(), quizAnswerReq.getWordId())) {
+                if (quizType == QuizType.WORD_TO_MEANING) {
+                    isCorrect = Objects.equals(q.getWord().getDescription(), quizAnswerReq.getAnswer());
+                    answerAndCorrect.put(KEY_ANSWER, q.getWord().getDescription());
+                } else {
+                    isCorrect = Objects.equals(q.getWord().getTerm(), quizAnswerReq.getAnswer());
+                    answerAndCorrect.put(KEY_ANSWER, q.getWord().getTerm());
+                }
+                q.setIsCorrect(isCorrect);
+                answerAndCorrect.put(KEY_CORRECT , isCorrect);
+            }
+        }
+        return answerAndCorrect;
     }
 }

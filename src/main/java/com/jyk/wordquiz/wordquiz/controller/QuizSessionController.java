@@ -2,16 +2,14 @@ package com.jyk.wordquiz.wordquiz.controller;
 
 import com.jyk.wordquiz.wordquiz.model.dto.request.QuizAnswerRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.request.QuizStartRequest;
+import com.jyk.wordquiz.wordquiz.model.dto.response.QuizAnswerResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.QuizSessionResponse;
 import com.jyk.wordquiz.wordquiz.service.QuizSessionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,11 +34,17 @@ public class QuizSessionController {
     }
 
     @PostMapping("/{sessionId}/answer")
-    public ResponseEntity<?> answerQuiz(Authentication authentication, @RequestBody QuizAnswerRequest quizAnswerReq) {
+    public ResponseEntity<?> answerQuiz(Authentication authentication,
+                                        @PathVariable Long sessionId,
+                                        @RequestBody QuizAnswerRequest quizAnswerReq) {
         String jwtToken = authentication.getCredentials().toString();
+        QuizAnswerResponse result = sessionService.getIsCorrect(jwtToken, sessionId, quizAnswerReq);
 
-        //TODO:
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "답변 채점을 완료했습니다.");
+        response.put("result", result);
 
-        return null;
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }

@@ -25,4 +25,5 @@ public interface QuizSessionRepository extends JpaRepository<QuizSession, Long> 
                                                          @Param("qids") List<Long> quizIds);
 
     Optional<QuizSession> findByUserAndQuizAndIsQuizActive(User user, Quiz quiz, boolean active);
+    Optional<QuizSession> findByIdAndUser(Long id, User user);
 }
