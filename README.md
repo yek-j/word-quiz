@@ -99,10 +99,11 @@
 | `/api/v1/wordbooks/{wordBookId}/words/template` | GET    | 단어 입력 템플릿 다운로드   | -                          | Authorization 헤더                | 템플릿(업로드 예시) 파일   |
 
 ### 퀴즈 API (Words)
-| 엔드포인트                      | 메소드    | 설명       | 요청 데이터                                          | 인증               | 응답 데이터 |
-|----------------------------|--------|----------|-------------------------------------------------|------------------|--------|
-| `/api/v1/quizzes`          | POST   | 퀴즈 생성    | name, description, WorkBook List, sharingStatus | Authorization 헤더 | 성공 메시지 |
-| `/api/v1/quizzes`          | GET    | 퀴즈 목록 조회 | page, sort, orderby, kind                       | Authorization 헤더 | 퀴즈 목록  |
-| `/api/v1/quizzes/{quizId}` | PUT    | 퀴즈 수정    | name, description, WorkBook List, sharingStatus | Authorization 헤더 | 성공 메시지  |
-| `/api/v1/quizzes/{quizId}` | DELETE | 퀴즈 삭제    | -                                               | Authorization 헤더 | 성공 메시지  |
-| `/api/v1/quiz-session`     | POST   | 퀴즈 시작    | quiz-id, quiz-type                              | Authorization 헤더 | 성공 메시지  |
+| 엔드포인트                                     | 메소드    | 설명       | 요청 데이터                                         | 인증               | 응답 데이터 |
+|-------------------------------------------|--------|----------|------------------------------------------------|------------------|--------|
+| `/api/v1/quizzes`                         | POST   | 퀴즈 생성    | name, description, WorkBook List, sharingStatus | Authorization 헤더 | 성공 메시지 |
+| `/api/v1/quizzes`                         | GET    | 퀴즈 목록 조회 | page, sort, orderby, kind                      | Authorization 헤더 | 퀴즈 목록  |
+| `/api/v1/quizzes/{quizId}`                | PUT    | 퀴즈 수정    | name, description, WorkBook List, sharingStatus | Authorization 헤더 | 성공 메시지 |
+| `/api/v1/quizzes/{quizId}`                | DELETE | 퀴즈 삭제    | -                                              | Authorization 헤더 | 성공 메시지 |
+| `/api/v1/quiz-session`                    | POST   | 퀴즈 시작    | quiz-id, quiz-type                             | Authorization 헤더 | 퀴즈 문제, 퀴즈 세션 정보 |
+| `/api/v1/quiz-session/{sessionId}/answer` | POST   | 퀴즈 답변 제출    | wordId, answer                              | Authorization 헤더 | 채점 결과  |

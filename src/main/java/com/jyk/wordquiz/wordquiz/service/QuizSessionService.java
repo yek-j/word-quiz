@@ -138,7 +138,6 @@ public class QuizSessionService {
     }
 
     /**
-     * TODO: 답변 제출 후 정답에 대한 결과를 DB에 저장하고 결과를 반환한다.
      * @param token: jwt token
      * @param sessionId: QuizSession Id
      * @param quizAnswerReq: 사용자 정답
