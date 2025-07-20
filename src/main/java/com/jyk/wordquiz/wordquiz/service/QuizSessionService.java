@@ -10,6 +10,7 @@ import com.jyk.wordquiz.wordquiz.model.dto.request.QuizAnswerRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.request.QuizStartRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.QuizAnswerResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.QuizProblem;
+import com.jyk.wordquiz.wordquiz.model.dto.response.QuizResultResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.QuizSessionResponse;
 import com.jyk.wordquiz.wordquiz.model.entity.*;
 import com.jyk.wordquiz.wordquiz.repository.QuizRepository;
@@ -19,6 +20,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -34,6 +36,7 @@ public class QuizSessionService {
 
     private static final String KEY_ANSWER = "Answer";
     private static final String KEY_CORRECT = "Correct";
+    private static final String KEY_ORDER = "Order";
 
     /**
      * 퀴즈 시작으로 신규 세션 생성
@@ -138,6 +141,7 @@ public class QuizSessionService {
     }
 
     /**
+     * 퀴즈 문제의 답변 채점
      * @param token: jwt token
      * @param sessionId: QuizSession Id
      * @param quizAnswerReq: 사용자 정답
@@ -158,14 +162,63 @@ public class QuizSessionService {
         List<QuizQuestion> quizQuestions = quizSession.getQuizQuestions();
         HashMap<String, Object> result = validateAndSaveAnswer(quizQuestions, quizAnswerReq, quizSession.getQuizType());
 
+        // 정답이면 score +1
+        boolean correct = Boolean.parseBoolean(result.get(KEY_CORRECT).toString());
+        if (correct) {
+            quizSession.setScore(quizSession.getScore() + 1);
+        }
+
         quizAnswerResponse.setCorrectAnswer(result.get(KEY_ANSWER).toString());
-        quizAnswerResponse.setCorrect(Boolean.parseBoolean(result.get(KEY_CORRECT ).toString()));
+        quizAnswerResponse.setCorrect(correct);
+
+        // 현재 답변한 문제의 순서 확인
+        int currentOrder = Integer.parseInt(result.get(KEY_ORDER).toString());
+        int quizQuestionSize = quizQuestions.size();
+
+        // 마지막 퀴즈 답변 완료 시 퀴즈 세션 종료
+        if(currentOrder == quizQuestionSize) {
+            quizSession.setQuizActive(false);
+        }
+
+        // 퀴즈 푼 시간
+        quizSession.setAttemptedAt(LocalDateTime.now());
 
         return quizAnswerResponse;
     }
 
+    /**
+     * 퀴즈 결과 반환
+     * @param token: jwt token
+     * @param sessionId: quiz session id
+     * @return : QuizResultResponse
+     */
+    public QuizResultResponse getQuizResult(String token, Long sessionId) {
+        Long userId = provider.getSubject(token);
+        User user = userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
+
+        // 퀴즈 세션 가져오기
+        QuizSession quizSession = quizSessionRepository.findByIdAndUser(sessionId, user).orElseThrow(() -> new QuizSessionNotFoundException(sessionId));
+
+        // isCorrect가 null이 아닌 문항 찾기
+        List<QuizQuestion> quizQuestions = quizSession.getQuizQuestions();
+        long answeredCount = quizQuestions.stream()
+                .filter(q -> q.getIsCorrect() != null)
+                .count();
+
+        QuizResultResponse quizResult = new QuizResultResponse(quizSession.getScore(), answeredCount, quizSession.getAttemptedAt());
+
+        return quizResult;
+    }
+
+    /**
+     * 퀴즈 정답 셋팅
+     * @param quizQuestions: 퀴즈 문제들
+     * @param quizAnswerReq: 답변
+     * @param quizType: 현재 퀴즈 타입
+     * @return HashMap<String, Object>
+     */
     private HashMap<String, Object> validateAndSaveAnswer(List<QuizQuestion> quizQuestions, QuizAnswerRequest quizAnswerReq, QuizType quizType) {
-        Boolean isCorrect = null;
+        boolean isCorrect = false;
         HashMap<String, Object> answerAndCorrect = new HashMap<>();
 
         for (QuizQuestion q : quizQuestions) {
@@ -179,6 +232,7 @@ public class QuizSessionService {
                 }
                 q.setIsCorrect(isCorrect);
                 answerAndCorrect.put(KEY_CORRECT , isCorrect);
+                answerAndCorrect.put(KEY_ORDER, q.getQuestionOrder());
             }
         }
         return answerAndCorrect;

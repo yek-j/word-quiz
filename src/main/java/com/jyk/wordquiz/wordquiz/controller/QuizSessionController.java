@@ -3,6 +3,7 @@ package com.jyk.wordquiz.wordquiz.controller;
 import com.jyk.wordquiz.wordquiz.model.dto.request.QuizAnswerRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.request.QuizStartRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.QuizAnswerResponse;
+import com.jyk.wordquiz.wordquiz.model.dto.response.QuizResultResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.QuizSessionResponse;
 import com.jyk.wordquiz.wordquiz.service.QuizSessionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +44,19 @@ public class QuizSessionController {
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");
         response.put("message", "답변 채점을 완료했습니다.");
+        response.put("result", result);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/{sessionId}/result")
+    public ResponseEntity<?> quizResult(Authentication authentication, @PathVariable Long sessionId) {
+        String jwtToken = authentication.getCredentials().toString();
+        QuizResultResponse result = sessionService.getQuizResult(jwtToken, sessionId);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "퀴즈 결과입니다.");
         response.put("result", result);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);

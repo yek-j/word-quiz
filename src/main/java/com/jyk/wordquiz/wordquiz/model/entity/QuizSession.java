@@ -36,7 +36,7 @@ public class QuizSession {
     @Column(nullable = false, name = "quiz_type")
     private QuizType quizType = QuizType.MEANING_TO_WORD;
 
-    @Column(name = "attempted_at", nullable = false, updatable = false)
+    @Column(name = "attempted_at", nullable = false)
     @CreationTimestamp
     private LocalDateTime attemptedAt;
 
