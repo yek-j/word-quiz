@@ -3,10 +3,7 @@ package com.jyk.wordquiz.wordquiz.service;
 import com.jyk.wordquiz.wordquiz.common.auth.JwtTokenProvider;
 import com.jyk.wordquiz.wordquiz.common.exception.AuthenticatedUserNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.exception.DuplicateUserException;
-import com.jyk.wordquiz.wordquiz.model.dto.request.ChangePwd;
-import com.jyk.wordquiz.wordquiz.model.dto.request.DeleteAccountRequest;
-import com.jyk.wordquiz.wordquiz.model.dto.request.LoginRequest;
-import com.jyk.wordquiz.wordquiz.model.dto.request.SignupRequest;
+import com.jyk.wordquiz.wordquiz.model.dto.request.*;
 import com.jyk.wordquiz.wordquiz.model.dto.response.LoginResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.UserInfoResponse;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
@@ -28,6 +25,10 @@ public class AuthService {
     @Autowired
     private JwtTokenProvider provider;
 
+    /**
+     * 회원가입
+     * @param signupReq: 회원가입 정보
+     */
     @Transactional
     public void siginup(SignupRequest signupReq) {
         Optional<User> findUser = userRepository.findByEmail(signupReq.getEmail());
@@ -43,6 +44,11 @@ public class AuthService {
         }
     }
 
+    /**
+     * 로그인
+     * @param loginReq: 로그인 정보
+     * @return LoginResponse: 사용자 정보와 토큰
+     */
     public LoginResponse login(LoginRequest loginReq){
         Optional<User> findUser = userRepository.findByEmail(loginReq.getEmail());
 
@@ -62,12 +68,36 @@ public class AuthService {
                 .build();
     }
 
+    /**
+     * 사용자 정보
+     * @param token: jwtToken
+     * @return UserInfoResponse: 사용자 정보
+     */
     public UserInfoResponse getUserInfo(String token){
         Long userId = provider.getSubject(token);
         User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
         return new UserInfoResponse(user.getUsername(), user.getEmail());
     }
 
+    /**
+     * 사용자 정보 수정
+     * @param token: jwtToken
+     * @param userInfoReq: 수정할 사용자 정보
+     */
+    public void updateUserInfo(String token, UserInfoRequest userInfoReq) {
+        Long userId = provider.getSubject(token);
+        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
+
+        if(!userInfoReq.getUsername().isBlank()) {
+            user.setUsername(userInfoReq.getUsername());
+        }
+    }
+
+    /**
+     * 비밀번호 변경
+     * @param token: jwtToken
+     * @param changePwd: 현재 비밀번호와 변경할 비밀번호
+     */
     @Transactional
     public void changePassword(String token, ChangePwd changePwd){
         Long userId = provider.getSubject(token);
@@ -82,6 +112,11 @@ public class AuthService {
         userRepository.save(user);
     }
 
+    /**
+     * 사용자 탈퇴
+     * @param token: jwtToken
+     * @param deleteReq: 비밀번호 정보
+     */
     @Transactional
     public void deleteUser(String token, DeleteAccountRequest deleteReq) {
         Long userId = provider.getSubject(token);

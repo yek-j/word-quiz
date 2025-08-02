@@ -54,6 +54,19 @@ public class AuthController {
         return ResponseEntity.ok(userInfo);
     }
 
+    @PutMapping("/me")
+    public ResponseEntity<?> updateUserInfo(Authentication authentication) {
+        String jwtToken = authentication.getCredentials().toString();
+
+
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "사용자 정보가 성공적으로 변경되었습니다.");
+
+        return ResponseEntity.ok(response);
+    }
+
     @PutMapping("/password")
     public ResponseEntity<?> changePassword(Authentication authentication, @RequestBody ChangePwd changePwd) {
         String jwtToken = authentication.getCredentials().toString();

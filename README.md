@@ -77,6 +77,7 @@
 | `/api/v1/auth/me` | GET    | 현재 사용자 정보 | -                            | Authorization 헤더 | 사용자 정보     |
 | `/api/v1/auth/password` | PUT    | 비밀번호 변경   | currentPassword, newPassword | Authorization 헤더 | 성공 메시지     |
 | `/api/v1/auth/me` | DELETE | 사용자 삭제    | password                     | Authorization 헤더 | 성공 메시지     |
+| `/api/v1/auth/me` | PUT | 사용자 수정    | username                     | Authorization 헤더 | 성공 메시지     |
 
 ### 단어장 API (WordBooks)
 
