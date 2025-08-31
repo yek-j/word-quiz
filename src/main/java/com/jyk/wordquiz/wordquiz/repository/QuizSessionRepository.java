@@ -37,4 +37,5 @@ public interface QuizSessionRepository extends JpaRepository<QuizSession, Long> 
     int countDistinctWordsByUser(@Param("userId") Long userId);
 
     List<QuizSession> findByUserAndIsQuizActive(User user, boolean isActive);
+    List<QuizSession> findByUser(User user);
 }

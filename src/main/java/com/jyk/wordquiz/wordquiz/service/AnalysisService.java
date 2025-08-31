@@ -2,20 +2,19 @@ package com.jyk.wordquiz.wordquiz.service;
 
 import com.jyk.wordquiz.wordquiz.common.auth.JwtTokenProvider;
 import com.jyk.wordquiz.wordquiz.common.exception.AuthenticatedUserNotFoundException;
-import com.jyk.wordquiz.wordquiz.model.dto.response.LearningOverview;
-import com.jyk.wordquiz.wordquiz.model.dto.response.WeekWordStats;
-import com.jyk.wordquiz.wordquiz.model.dto.response.WeekWordsAnalysis;
-import com.jyk.wordquiz.wordquiz.model.entity.QuizQuestion;
-import com.jyk.wordquiz.wordquiz.model.entity.QuizSession;
-import com.jyk.wordquiz.wordquiz.model.entity.User;
-import com.jyk.wordquiz.wordquiz.model.entity.Word;
+import com.jyk.wordquiz.wordquiz.common.exception.QuizSessionNotFoundException;
+import com.jyk.wordquiz.wordquiz.model.dto.response.*;
+import com.jyk.wordquiz.wordquiz.model.entity.*;
 import com.jyk.wordquiz.wordquiz.repository.QuizSessionRepository;
 import com.jyk.wordquiz.wordquiz.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class AnalysisService {
@@ -25,6 +24,51 @@ public class AnalysisService {
     private QuizSessionRepository quizSessionRepository;
     @Autowired
     private UserRepository userRepository;
+
+    /**
+     * 퀴즈별 통계
+     * @param token: jwt token
+     * @return
+     */
+    public QuizAnalysis quizAnalysis(String token) {
+        Long userId = provider.getSubject(token);
+        User user = userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
+
+        List<QuizSession> sessions = quizSessionRepository.findByUser(user);
+
+        Map<Quiz, List<QuizSession>> quizSessionMap = sessions.stream()
+                .collect(Collectors.groupingBy(QuizSession::getQuiz));
+
+        List<QuizStats> quizStatsList = new ArrayList<>();
+
+        for(Map.Entry<Quiz, List<QuizSession>> entry : quizSessionMap.entrySet()) {
+            Quiz quiz = entry.getKey();
+            List<QuizSession> quizSessions = entry.getValue();
+
+            int attemptCount = quizSessions.size();
+            int bestScore = quizSessions.stream().mapToInt(QuizSession::getScore).max().orElse(0);
+            double averageScore = quizSessions.stream().mapToInt(QuizSession::getScore).average().orElse(0.0);
+
+            QuizSession lastSession = quizSessions.stream()
+                    .max(Comparator.comparing(QuizSession::getAttemptedAt))
+                    .orElse(null);
+
+            if (lastSession == null) {
+                continue;
+            }
+
+            int lastScore = lastSession.getScore();
+            LocalDateTime lastAttempted = lastSession.getAttemptedAt();
+
+            QuizStats quizStats = new QuizStats(quiz.getId(),
+                    quiz.getName(), attemptCount, bestScore, averageScore,
+                    lastScore, lastAttempted);
+
+            quizStatsList.add(quizStats);
+        }
+
+        return new QuizAnalysis(quizStatsList, quizStatsList.size());
+    }
 
     /**
      * 단여별 취약점 분석
@@ -101,6 +145,78 @@ public class AnalysisService {
         // 학습한 단어 수
         int totalWordsLearned = quizSessionRepository.countDistinctWordsByUser(userId);
 
-        return new LearningOverview(totalWordsLearned, totalAttempts);
+        List<QuizSession> sessions = quizSessionRepository.findByUser(user);
+
+        List<LocalDate> studyDates = sessions.stream()
+                .map(session -> session.getAttemptedAt().toLocalDate())
+                .distinct()
+                .sorted()
+                .toList();
+
+        // 연속일 계산
+        int consecutiveDays = calculateConsecutiveStudyDays(studyDates);
+
+        // 오늘 공부했는지 확인
+        boolean studiedToday = studyDates.contains(LocalDate.now());
+
+        // 이번 주 공부 횟수
+        int thisWeekQuizCount = calculateThisWeekQuizCount(sessions);
+
+        // 마지막 공부 날짜
+        LocalDate lastStudyDate = null;
+        if(!studyDates.isEmpty()) {
+            lastStudyDate = studyDates.getLast();
+        }
+
+        return new LearningOverview(totalWordsLearned,
+                totalAttempts,
+                consecutiveDays,
+                studiedToday,
+                thisWeekQuizCount,
+                lastStudyDate);
+    }
+
+    /**
+     * 연속일 계산 로직 설계
+     * @param studyDates: 사용자 퀴즈 시도일 리스트
+     * @return 연속일 
+     */
+    private int calculateConsecutiveStudyDays(List<LocalDate> studyDates) {
+        if (studyDates.isEmpty()) {
+            return 0;
+        }
+
+        LocalDate checkDate = LocalDate.now();
+        int consecutiveDays = 0;
+
+        // 오늘 공부 안했을 경우
+        if (!studyDates.contains(checkDate)) {
+            checkDate = checkDate.minusDays(1);
+        }
+
+        while (studyDates.contains(checkDate)) {
+            consecutiveDays++;
+            checkDate = checkDate.minusDays(1); // 하루씩 뒤로
+        }
+
+        return consecutiveDays;
+    }
+
+    /**
+     * 이번 주 공부 횟수
+     * @param sessions: 사용자 퀴즈 세션 리스트
+     * @return 이번 주 공부한 날 수
+     */
+    private int calculateThisWeekQuizCount(List<QuizSession> sessions) {
+        LocalDate today = LocalDate.now();
+        LocalDate startOfWeek = today.with(DayOfWeek.MONDAY); // 이번주 월요일
+        LocalDate endOfWeek = today.with(DayOfWeek.SUNDAY); // 이번주 일요일
+
+        return (int) sessions.stream()
+                .filter(session -> {
+                    LocalDate sessionDate = session.getAttemptedAt().toLocalDate();
+                    return !sessionDate.isBefore(startOfWeek) && !sessionDate.isAfter(endOfWeek);
+                })
+                .count();
     }
 }

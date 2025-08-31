@@ -1,6 +1,7 @@
 package com.jyk.wordquiz.wordquiz.controller;
 
 import com.jyk.wordquiz.wordquiz.model.dto.response.LearningOverview;
+import com.jyk.wordquiz.wordquiz.model.dto.response.QuizAnalysis;
 import com.jyk.wordquiz.wordquiz.model.dto.response.WeekWordsAnalysis;
 import com.jyk.wordquiz.wordquiz.service.AnalysisService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,14 +21,16 @@ public class AnalysisController {
     @Autowired
     private AnalysisService analysisService;
 
-    // TODO: 퀴즈별 성과 분석(학습 히스토리) = 시도횟수, 최고 점수, 평균점수, 등
     @GetMapping("/quiz")
     public ResponseEntity<?> getQuizAnalysis(Authentication authentication) {
         String jwtToken = authentication.getCredentials().toString();
 
+        QuizAnalysis result = analysisService.quizAnalysis(jwtToken);
+
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");
-        response.put("message", "퀴즈 분석을 가져왔습니다.");
+        response.put("message", "퀴즈별 분석을 가져왔습니다.");
+        response.put("result", result);
 
         return ResponseEntity.ok(response);
     }
