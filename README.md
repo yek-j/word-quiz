@@ -109,3 +109,10 @@
 | `/api/v1/quiz-session`                    | POST   | 퀴즈 시작    | quiz-id, quiz-type                            | Authorization 헤더 | 퀴즈 문제, 퀴즈 세션 정보 |
 | `/api/v1/quiz-session/{sessionId}/answer` | POST   | 퀴즈 답변 제출 | wordId, answer                             | Authorization 헤더 | 채점 결과           |
 | `/api/v1/quiz-session/{sessionId}/result` | POST   | 퀴즈 결과    |                               | Authorization 헤더 | 퀴즈 완료 결과        |
+
+### 분석 API (Analysis)
+| 엔드포인트                                    | 메소드    | 설명        | 요청 데이터                             | 인증               | 응답 데이터          |
+|------------------------------------------|--------|-----------|------------------------------------|------------------|-----------------|
+| `/api/v1/analysis/quiz`                  | GET   | 퀴즈별 통계 분석 | -                                  | Authorization 헤더 | 퀴즈별 성과 통계          |
+| `/api/v1/analysis/week-words`            | GET    | 취약 단어 분석  | limit(기본값:10), maxAccuracy(기본값:50) | Authorization 헤더 | 취약 단어 목록과 통계           |
+| `/api/v1/analysis/overview`              | GET    | 전체 학습 현황     | -                                  | Authorization 헤더 | 학습 개요 통계          |
