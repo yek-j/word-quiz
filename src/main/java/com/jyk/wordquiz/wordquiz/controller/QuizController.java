@@ -1,6 +1,7 @@
 package com.jyk.wordquiz.wordquiz.controller;
 
 import com.jyk.wordquiz.wordquiz.model.dto.request.QuizParamRequest;
+import com.jyk.wordquiz.wordquiz.model.dto.response.QuizResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.QuizzesResponse;
 import com.jyk.wordquiz.wordquiz.service.QuizService;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,19 @@ public class QuizController {
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");
         response.put("message", "퀴즈 리스트를 불러왔습니다.");
+        response.put("result", result);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/{quizId}")
+    public ResponseEntity<?> getQuiz(Authentication authentication, @PathVariable Long quizId) {
+        String jwtToken = authentication.getCredentials().toString();
+        QuizResponse result = quizService.getQuiz(jwtToken, quizId);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "퀴즈 상세정보를 불러왔습니다.");
         response.put("result", result);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);

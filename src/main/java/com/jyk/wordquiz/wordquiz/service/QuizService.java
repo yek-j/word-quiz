@@ -5,8 +5,10 @@ import com.jyk.wordquiz.wordquiz.common.exception.AuthenticatedUserNotFoundExcep
 import com.jyk.wordquiz.wordquiz.common.exception.QuizNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.type.SharingStatus;
 import com.jyk.wordquiz.wordquiz.model.dto.request.QuizParamRequest;
+import com.jyk.wordquiz.wordquiz.model.dto.response.QuizResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.Quizzes;
 import com.jyk.wordquiz.wordquiz.model.dto.response.QuizzesResponse;
+import com.jyk.wordquiz.wordquiz.model.dto.response.WordBooks;
 import com.jyk.wordquiz.wordquiz.model.entity.Quiz;
 import com.jyk.wordquiz.wordquiz.model.entity.QuizSession;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
@@ -79,6 +81,17 @@ public class QuizService {
 
         quizRepository.save(newQuiz);
 
+    }
+
+    public QuizResponse getQuiz(String token, Long quizId) {
+        Long userId = provider.getSubject(token);
+        User user = userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
+
+        Quiz quiz = quizRepository.findByCreatedByAndId(user, quizId).orElseThrow(() -> new QuizNotFoundException(quizId));;
+
+        List<WordBooks> wordBooks = quiz.getQuizWordBooks().stream().map(WordBooks::new).toList();
+
+        return new QuizResponse(quiz.getName(), quiz.getCreatedBy().getUsername(), quiz.getSharingStatus(), quiz.getDescription(), wordBooks);
     }
 
     /**
