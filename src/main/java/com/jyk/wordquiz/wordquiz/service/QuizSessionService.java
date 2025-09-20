@@ -1,7 +1,5 @@
 package com.jyk.wordquiz.wordquiz.service;
 
-import com.jyk.wordquiz.wordquiz.common.auth.JwtTokenProvider;
-import com.jyk.wordquiz.wordquiz.common.exception.AuthenticatedUserNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.exception.QuizNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.exception.QuizSessionNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.type.QuizType;
@@ -26,8 +24,6 @@ import java.util.*;
 @Service
 public class QuizSessionService {
     @Autowired
-    private JwtTokenProvider provider;
-    @Autowired
     private UserRepository userRepository;
     @Autowired
     private QuizRepository quizRepository;
@@ -41,15 +37,13 @@ public class QuizSessionService {
     /**
      * 퀴즈 시작으로 신규 세션 생성
      * 아직 완료하지 않은 퀴즈면 기존 세션 정보 반환
-     * @param token: jwt 토큰
+     * @param user: 사용자
      * @param quizStartReq: 퀴즈 시작을 위한 정보
      * @return 퀴즈 세션 정보
      */
     @Transactional
-    public QuizSessionResponse startQuiz(String token, QuizStartRequest quizStartReq) {
-        Long userId = provider.getSubject(token);
-        User user = userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
-
+    public QuizSessionResponse startQuiz(User user, QuizStartRequest quizStartReq) {
+        
         // 시작하려는 퀴즈 가져오기
         Quiz quiz = quizRepository.findById(quizStartReq.getQuizId()).orElseThrow(() -> new QuizNotFoundException(quizStartReq.getQuizId()));
 
@@ -81,7 +75,8 @@ public class QuizSessionService {
         }
 
         // 본인이 만들었거나 PUBLIC 퀴즈인지 확인
-        if(!quiz.getCreatedBy().equals(user) && quiz.getSharingStatus() != SharingStatus.PUBLIC) {
+        if(!quiz.getCreatedBy().getId().equals(user.getId())
+                && quiz.getSharingStatus() != SharingStatus.PUBLIC) {
             throw new QuizNotFoundException(quiz.getId());
         }
 
@@ -142,16 +137,14 @@ public class QuizSessionService {
 
     /**
      * 퀴즈 문제의 답변 채점
-     * @param token: jwt token
+     * @param user: 사용자
      * @param sessionId: QuizSession Id
      * @param quizAnswerReq: 사용자 정답
      * @return QuizAnswerResponse
      */
     @Transactional
-    public QuizAnswerResponse getIsCorrect(String token, Long sessionId, QuizAnswerRequest quizAnswerReq) {
-        Long userId = provider.getSubject(token);
-        User user = userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
-
+    public QuizAnswerResponse getIsCorrect(User user, Long sessionId, QuizAnswerRequest quizAnswerReq) {
+        
         // 퀴즈 세션 가져오기
         QuizSession quizSession = quizSessionRepository.findByIdAndUser(sessionId, user).orElseThrow(() -> new QuizSessionNotFoundException(sessionId));
 
@@ -188,14 +181,12 @@ public class QuizSessionService {
 
     /**
      * 퀴즈 결과 반환
-     * @param token: jwt token
+     * @param user: 사용자
      * @param sessionId: quiz session id
      * @return : QuizResultResponse
      */
-    public QuizResultResponse getQuizResult(String token, Long sessionId) {
-        Long userId = provider.getSubject(token);
-        User user = userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
-
+    public QuizResultResponse getQuizResult(User user, Long sessionId) {
+        
         // 퀴즈 세션 가져오기
         QuizSession quizSession = quizSessionRepository.findByIdAndUser(sessionId, user).orElseThrow(() -> new QuizSessionNotFoundException(sessionId));
 

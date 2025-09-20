@@ -1,7 +1,5 @@
 package com.jyk.wordquiz.wordquiz.service;
 
-import com.jyk.wordquiz.wordquiz.common.auth.JwtTokenProvider;
-import com.jyk.wordquiz.wordquiz.common.exception.AuthenticatedUserNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.exception.DuplicationWordException;
 import com.jyk.wordquiz.wordquiz.common.exception.WordBookNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.exception.WordNotFoundException;
@@ -14,7 +12,6 @@ import com.jyk.wordquiz.wordquiz.model.dto.response.WordsResponse;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.model.entity.Word;
 import com.jyk.wordquiz.wordquiz.model.entity.WordBook;
-import com.jyk.wordquiz.wordquiz.repository.UserRepository;
 import com.jyk.wordquiz.wordquiz.repository.WordBookRepository;
 import com.jyk.wordquiz.wordquiz.repository.WordRepository;
 import jakarta.transaction.Transactional;
@@ -35,16 +32,9 @@ public class WordService {
     @Autowired
     private WordRepository wordRepository;
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
     private WordBookRepository wordBookRepository;
-    @Autowired
-    private JwtTokenProvider provider;
 
-    public WordsResponse getWords(Long wordBookId, String token, int page, String criteria, String sort) throws AccessDeniedException {
-        Long userId = provider.getSubject(token);
-        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
-
+    public WordsResponse getWords(Long wordBookId, User user, int page, String criteria, String sort) throws AccessDeniedException {
         Sort.Direction direction = Sort.Direction.DESC;
 
         if(sort.equals("ASC")) {
@@ -57,7 +47,7 @@ public class WordService {
         WordBook wordBook = wordBookRepository.findById(wordBookId)
                 .orElseThrow(() -> new WordBookNotFoundException(wordBookId));
 
-        if(!wordBook.getCreatedBy().equals(user)) {
+        if(!wordBook.getCreatedBy().getId().equals(user.getId())) {
             throw new AccessDeniedException("이 단어장에 대한 접근 권한이 없습니다.");
         }
 
@@ -74,15 +64,12 @@ public class WordService {
     }
 
     @Transactional
-    public void saveWord(Long wordBookId, WordRequest wordReq, String token) throws AccessDeniedException {
-        Long userId = provider.getSubject(token);
-        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
-
+    public void saveWord(Long wordBookId, WordRequest wordReq, User user) throws AccessDeniedException {
         // 단어장
         WordBook wordBook = wordBookRepository.findById(wordBookId)
                 .orElseThrow(() -> new WordBookNotFoundException(wordBookId));
 
-        if(!wordBook.getCreatedBy().equals(user)) {
+        if(!wordBook.getCreatedBy().getId().equals(user.getId())) {
             throw new AccessDeniedException("이 단어장에 대한 접근 권한이 없습니다.");
         }
 
@@ -104,15 +91,12 @@ public class WordService {
     }
 
     @Transactional
-    public void updateWord(Long wordBookId, Long wordId, UpdateWordRequest updateWordReq, String token) throws AccessDeniedException {
-        Long userId = provider.getSubject(token);
-        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
-
+    public void updateWord(Long wordBookId, Long wordId, UpdateWordRequest updateWordReq, User user) throws AccessDeniedException {
         // 단어장 권한 확인
         WordBook wordBook = wordBookRepository.findById(wordBookId)
                 .orElseThrow(() -> new WordBookNotFoundException(wordBookId));
 
-        if(!wordBook.getCreatedBy().equals(user)) {
+        if(!wordBook.getCreatedBy().getId().equals(user.getId())) {
             throw new AccessDeniedException("이 단어장에 대한 접근 권한이 없습니다.");
         }
 
@@ -138,15 +122,12 @@ public class WordService {
         wordRepository.save(word);
     }
 
-    public void deleteWord(Long wordBookId, Long wordId, String token) throws AccessDeniedException {
-        Long userId = provider.getSubject(token);
-        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
-
+    public void deleteWord(Long wordBookId, Long wordId, User user) throws AccessDeniedException {
         // 단어장 권한 확인
         WordBook wordBook = wordBookRepository.findById(wordBookId)
                 .orElseThrow(() -> new WordBookNotFoundException(wordBookId));
 
-        if(!wordBook.getCreatedBy().equals(user)) {
+        if(!wordBook.getCreatedBy().getId().equals(user.getId())) {
             throw new AccessDeniedException("이 단어장에 대한 접근 권한이 없습니다.");
         }
 
@@ -155,15 +136,12 @@ public class WordService {
         wordRepository.delete(word);
     }
 
-    public WordCheckResponse wordCheck(WordCheckRequest wordCheckReq, Long wordBookId, String token) throws AccessDeniedException {
-        Long userId = provider.getSubject(token);
-        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
-
+    public WordCheckResponse wordCheck(WordCheckRequest wordCheckReq, Long wordBookId, User user) throws AccessDeniedException {
         // 단어장 권한 확인
         WordBook wordBook = wordBookRepository.findById(wordBookId)
                 .orElseThrow(() -> new WordBookNotFoundException(wordBookId));
 
-        if(!wordBook.getCreatedBy().equals(user)) {
+        if(!wordBook.getCreatedBy().getId().equals(user.getId())) {
             throw new AccessDeniedException("이 단어장에 대한 접근 권한이 없습니다.");
         }
 
@@ -182,15 +160,12 @@ public class WordService {
     }
 
     @Transactional
-    public List<Words> saveExcelData(Map<String, String> words, Long wordBookId, String token) throws AccessDeniedException {
-        Long userId = provider.getSubject(token);
-        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
-
+    public List<Words> saveExcelData(Map<String, String> words, Long wordBookId, User user) throws AccessDeniedException {
         // 단어장 권한 확인
         WordBook wordBook = wordBookRepository.findById(wordBookId)
                 .orElseThrow(() -> new WordBookNotFoundException(wordBookId));
 
-        if(!wordBook.getCreatedBy().equals(user)) {
+        if(!wordBook.getCreatedBy().getId().equals(user.getId())) {
             throw new AccessDeniedException("이 단어장에 대한 접근 권한이 없습니다.");
         }
 

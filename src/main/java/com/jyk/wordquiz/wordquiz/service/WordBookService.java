@@ -1,14 +1,11 @@
 package com.jyk.wordquiz.wordquiz.service;
 
-import com.jyk.wordquiz.wordquiz.common.auth.JwtTokenProvider;
-import com.jyk.wordquiz.wordquiz.common.exception.AuthenticatedUserNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.exception.WordBookNotFoundException;
 import com.jyk.wordquiz.wordquiz.model.dto.request.WordBookRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.WordBooks;
 import com.jyk.wordquiz.wordquiz.model.dto.response.WordBooksResponse;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.model.entity.WordBook;
-import com.jyk.wordquiz.wordquiz.repository.UserRepository;
 import com.jyk.wordquiz.wordquiz.repository.WordBookRepository;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -26,15 +23,8 @@ import java.util.List;
 public class WordBookService {
     @Autowired
     private WordBookRepository wordBookRepository;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private JwtTokenProvider provider;
 
-    public WordBooksResponse getWordBooks(String token, int page, String criteria, String sort) {
-        Long userId = provider.getSubject(token);
-        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
-
+    public WordBooksResponse getWordBooks(User user, int page, String criteria, String sort) {
         Sort.Direction direction = Sort.Direction.DESC;
 
         if(sort.equals("ASC")) {
@@ -46,7 +36,7 @@ public class WordBookService {
         Page<WordBook> findWordBooks = wordBookRepository.findByCreatedBy(user, pageReq);
 
         Page<WordBooks> pageWordBooks = findWordBooks.map(w -> new WordBooks(
-                w.getId(), w.getName(), w.getDescription(), user.getUsername(), userId, w.getCreatedAt()
+                w.getId(), w.getName(), w.getDescription(), user.getUsername(), user.getId(), w.getCreatedAt()
         ));
 
         int totalPages = pageWordBooks.getTotalPages();
@@ -56,10 +46,7 @@ public class WordBookService {
     }
 
     @Transactional
-    public void saveWordBook(WordBookRequest wordBookReq, String token) {
-        Long userId = provider.getSubject(token);
-        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
-
+    public void saveWordBook(WordBookRequest wordBookReq, User user) {
         WordBook newWordBook = new WordBook();
         newWordBook.setName(wordBookReq.getName());
         newWordBook.setDescription(wordBookReq.getDescription());
@@ -70,10 +57,7 @@ public class WordBookService {
     }
 
     @Transactional
-    public void updateWordBook(Long id, WordBookRequest wordBookReq, String token) {
-        Long userId = provider.getSubject(token);
-        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
-
+    public void updateWordBook(Long id, WordBookRequest wordBookReq, User user) {
         WordBook wordBook = wordBookRepository.findByIdAndCreatedBy(id, user).orElseThrow(() -> new WordBookNotFoundException(id));
 
         if(wordBookReq.getName().isEmpty()) {
@@ -87,10 +71,7 @@ public class WordBookService {
     }
 
     @Transactional
-    public void deleteWordBook(Long id, String token) {
-        Long userId = provider.getSubject(token);
-        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
-
+    public void deleteWordBook(Long id, User user) {
         WordBook wordBook = wordBookRepository.findByIdAndCreatedBy(id, user).orElseThrow(() -> new WordBookNotFoundException(id));
 
         wordBookRepository.delete(wordBook);

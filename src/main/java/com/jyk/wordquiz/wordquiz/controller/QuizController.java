@@ -1,8 +1,10 @@
 package com.jyk.wordquiz.wordquiz.controller;
 
+import com.jyk.wordquiz.wordquiz.common.auth.AuthUtil;
 import com.jyk.wordquiz.wordquiz.model.dto.request.QuizParamRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.QuizResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.QuizzesResponse;
+import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.service.QuizService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,8 +25,8 @@ public class QuizController {
 
     @PostMapping
     public ResponseEntity<?> createQuiz(Authentication authentication, @RequestBody QuizParamRequest quizParamRequest) {
-        String jwtToken = authentication.getCredentials().toString();
-        quizService.createQuiz(jwtToken, quizParamRequest);
+        User user = AuthUtil.getCurrentUser(authentication);
+        quizService.createQuiz(user, quizParamRequest);
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");
@@ -38,8 +40,8 @@ public class QuizController {
                                          @RequestParam(required= false, defaultValue = "DESC", value = "sort") String sort,
                                          @RequestParam(required = false, defaultValue = "ALL", value = "kind") String kind) {
         
-        String jwtToken = authentication.getCredentials().toString();
-        QuizzesResponse result = quizService.getQuizList(jwtToken, page, criteria, sort.toUpperCase(), kind);
+        User user = AuthUtil.getCurrentUser(authentication);
+        QuizzesResponse result = quizService.getQuizList(user, page, criteria, sort.toUpperCase(), kind);
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");
@@ -51,8 +53,8 @@ public class QuizController {
 
     @GetMapping("/{quizId}")
     public ResponseEntity<?> getQuiz(Authentication authentication, @PathVariable Long quizId) {
-        String jwtToken = authentication.getCredentials().toString();
-        QuizResponse result = quizService.getQuiz(jwtToken, quizId);
+        User user = AuthUtil.getCurrentUser(authentication);
+        QuizResponse result = quizService.getQuiz(user, quizId);
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");
@@ -64,9 +66,9 @@ public class QuizController {
 
     @PutMapping("/{quizId}")
     public ResponseEntity<?> updateQuiz(Authentication authentication, @PathVariable Long quizId, @RequestBody QuizParamRequest quizParamRequest) {
-        String jwtToken = authentication.getCredentials().toString();
+        User user = AuthUtil.getCurrentUser(authentication);
 
-        quizService.updateQuiz(jwtToken, quizId, quizParamRequest);
+        quizService.updateQuiz(user, quizId, quizParamRequest);
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");
@@ -77,9 +79,9 @@ public class QuizController {
 
     @DeleteMapping("/{quizId}")
     public ResponseEntity<?> deleteQuiz(Authentication authentication, @PathVariable Long quizId) {
-        String jwtToken = authentication.getCredentials().toString();
+        User user = AuthUtil.getCurrentUser(authentication);
 
-        quizService.deleteQuiz(jwtToken, quizId);
+        quizService.deleteQuiz(user, quizId);
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");

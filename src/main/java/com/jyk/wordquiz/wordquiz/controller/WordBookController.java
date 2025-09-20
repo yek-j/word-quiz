@@ -1,8 +1,9 @@
 package com.jyk.wordquiz.wordquiz.controller;
 
-import com.jyk.wordquiz.wordquiz.common.exception.AuthenticatedUserNotFoundException;
+import com.jyk.wordquiz.wordquiz.common.auth.AuthUtil;
 import com.jyk.wordquiz.wordquiz.model.dto.request.WordBookRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.WordBooksResponse;
+import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.service.WordBookService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,9 +27,9 @@ public class WordBookController {
                                           @RequestParam(required = false, defaultValue = "0", value = "page") int page,
                                           @RequestParam(required = false, defaultValue = "id", value = "orderby") String criteria,
                                           @RequestParam(required= false, defaultValue = "DESC", value = "sort") String sort) {
-        String jwtToken = authentication.getCredentials().toString();
+        User user = AuthUtil.getCurrentUser(authentication);
 
-        WordBooksResponse result = wordBookService.getWordBooks(jwtToken, page, criteria, sort.toUpperCase());
+        WordBooksResponse result = wordBookService.getWordBooks(user, page, criteria, sort.toUpperCase());
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");
@@ -40,8 +41,8 @@ public class WordBookController {
 
     @PostMapping
     public ResponseEntity<?> addWordBook(Authentication authentication, @RequestBody WordBookRequest wordBookReq) {
-        String jwtToken = authentication.getCredentials().toString();
-        wordBookService.saveWordBook(wordBookReq, jwtToken);
+        User user = AuthUtil.getCurrentUser(authentication);
+        wordBookService.saveWordBook(wordBookReq, user);
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");
@@ -52,8 +53,8 @@ public class WordBookController {
 
     @PutMapping("/{id}")
     public ResponseEntity<?> putWordBook(@PathVariable Long id, Authentication authentication, @RequestBody WordBookRequest wordBookReq) {
-        String jwtToken = authentication.getCredentials().toString();
-        wordBookService.updateWordBook(id, wordBookReq, jwtToken);
+        User user = AuthUtil.getCurrentUser(authentication);
+        wordBookService.updateWordBook(id, wordBookReq, user);
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");
@@ -64,8 +65,8 @@ public class WordBookController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delWordBook(Authentication authentication, @PathVariable Long id) {
-        String jwtToken = authentication.getCredentials().toString();
-        wordBookService.deleteWordBook(id, jwtToken);
+        User user = AuthUtil.getCurrentUser(authentication);
+        wordBookService.deleteWordBook(id, user);
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");

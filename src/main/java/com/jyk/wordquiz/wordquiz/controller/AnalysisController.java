@@ -1,8 +1,10 @@
 package com.jyk.wordquiz.wordquiz.controller;
 
+import com.jyk.wordquiz.wordquiz.common.auth.AuthUtil;
 import com.jyk.wordquiz.wordquiz.model.dto.response.LearningOverview;
 import com.jyk.wordquiz.wordquiz.model.dto.response.QuizAnalysis;
 import com.jyk.wordquiz.wordquiz.model.dto.response.WeekWordsAnalysis;
+import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.service.AnalysisService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -23,9 +25,9 @@ public class AnalysisController {
 
     @GetMapping("/quiz")
     public ResponseEntity<?> getQuizAnalysis(Authentication authentication) {
-        String jwtToken = authentication.getCredentials().toString();
+        User user = AuthUtil.getCurrentUser(authentication);
 
-        QuizAnalysis result = analysisService.quizAnalysis(jwtToken);
+        QuizAnalysis result = analysisService.quizAnalysis(user);
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");
@@ -39,9 +41,9 @@ public class AnalysisController {
     public ResponseEntity<?> getWeekWordAnalysis(Authentication authentication,
                                                  @RequestParam(defaultValue = "10") int limit,
                                                  @RequestParam(defaultValue = "50") int maxAccuracy) {
-        String jwtToken = authentication.getCredentials().toString();
+        User user = AuthUtil.getCurrentUser(authentication);
 
-        WeekWordsAnalysis result = analysisService.weekWordsAnalysis(jwtToken, limit, maxAccuracy);
+        WeekWordsAnalysis result = analysisService.weekWordsAnalysis(user, limit, maxAccuracy);
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");
@@ -53,9 +55,9 @@ public class AnalysisController {
 
     @GetMapping("/overview")
     public ResponseEntity<?> getLearningOverview(Authentication authentication) {
-        String jwtToken = authentication.getCredentials().toString();
+        User user = AuthUtil.getCurrentUser(authentication);
 
-        LearningOverview result = analysisService.getLearningOverview(jwtToken);
+        LearningOverview result = analysisService.getLearningOverview(user);
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");

@@ -1,12 +1,8 @@
 package com.jyk.wordquiz.wordquiz.service;
 
-import com.jyk.wordquiz.wordquiz.common.auth.JwtTokenProvider;
-import com.jyk.wordquiz.wordquiz.common.exception.AuthenticatedUserNotFoundException;
-import com.jyk.wordquiz.wordquiz.common.exception.QuizSessionNotFoundException;
 import com.jyk.wordquiz.wordquiz.model.dto.response.*;
 import com.jyk.wordquiz.wordquiz.model.entity.*;
 import com.jyk.wordquiz.wordquiz.repository.QuizSessionRepository;
-import com.jyk.wordquiz.wordquiz.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,21 +15,14 @@ import java.util.stream.Collectors;
 @Service
 public class AnalysisService {
     @Autowired
-    private JwtTokenProvider provider;
-    @Autowired
     private QuizSessionRepository quizSessionRepository;
-    @Autowired
-    private UserRepository userRepository;
 
     /**
      * 퀴즈별 통계
-     * @param token: jwt token
+     * @param user: 사용자
      * @return
      */
-    public QuizAnalysis quizAnalysis(String token) {
-        Long userId = provider.getSubject(token);
-        User user = userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
-
+    public QuizAnalysis quizAnalysis(User user) {
         List<QuizSession> sessions = quizSessionRepository.findByUser(user);
 
         Map<Quiz, List<QuizSession>> quizSessionMap = sessions.stream()
@@ -72,15 +61,12 @@ public class AnalysisService {
 
     /**
      * 단여별 취약점 분석
-     * @param token: jwt 토큰
+     * @param user: 사용자
      * @param limit: 최대 개수
      * @param maxAccuracy: 최대 정답률
      * @return WeekWordsAnalysis(단어 정답 횟수, 총 단어 수)
      */
-    public WeekWordsAnalysis weekWordsAnalysis(String token, int limit, int maxAccuracy) {
-        Long userId = provider.getSubject(token);
-        User user = userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
-
+    public WeekWordsAnalysis weekWordsAnalysis(User user, int limit, int maxAccuracy) {
         List<QuizSession> sessions = quizSessionRepository.findByUserAndIsQuizActive(user, false);
 
         List<WeekWordStats> weekWordsList = new ArrayList<>();
@@ -133,17 +119,14 @@ public class AnalysisService {
 
     /**
      * 전체 학습 통계
-     * @param token: jwt 토큰
+     * @param user: 사용자
      * @return LearningOverview(학습한 단어 수, 총 퀴즈 시도 횟수)
      */
-    public LearningOverview getLearningOverview(String token) {
-        Long userId = provider.getSubject(token);
-        User user = userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
-
+    public LearningOverview getLearningOverview(User user) {
         // 총 퀴즈 시도 횟수
         int totalAttempts = quizSessionRepository.countByUser(user);
         // 학습한 단어 수
-        int totalWordsLearned = quizSessionRepository.countDistinctWordsByUser(userId);
+        int totalWordsLearned = quizSessionRepository.countDistinctWordsByUser(user.getId());
 
         List<QuizSession> sessions = quizSessionRepository.findByUser(user);
 

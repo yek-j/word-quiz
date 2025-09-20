@@ -1,7 +1,6 @@
 package com.jyk.wordquiz.wordquiz.service;
 
 import com.jyk.wordquiz.wordquiz.common.auth.JwtTokenProvider;
-import com.jyk.wordquiz.wordquiz.common.exception.AuthenticatedUserNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.exception.DuplicateUserException;
 import com.jyk.wordquiz.wordquiz.model.dto.request.*;
 import com.jyk.wordquiz.wordquiz.model.dto.response.LoginResponse;
@@ -70,39 +69,38 @@ public class AuthService {
 
     /**
      * 사용자 정보
-     * @param token: jwtToken
+     * @param user: 사용자
      * @return UserInfoResponse: 사용자 정보
      */
-    public UserInfoResponse getUserInfo(String token){
-        Long userId = provider.getSubject(token);
-        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
+    public UserInfoResponse getUserInfo(User user){
         return new UserInfoResponse(user.getUsername(), user.getEmail());
     }
 
     /**
      * 사용자 정보 수정
-     * @param token: jwtToken
+     * @param user: 사용자
      * @param userInfoReq: 수정할 사용자 정보
      */
-    public void updateUserInfo(String token, UserInfoRequest userInfoReq) {
-        Long userId = provider.getSubject(token);
-        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
-
+    @Transactional
+    public void updateUserInfo(User user, UserInfoRequest userInfoReq) {
+        
         if(!userInfoReq.getUsername().isBlank()) {
             user.setUsername(userInfoReq.getUsername());
         }
+        
+        user.setUsername(userInfoReq.getUsername());
+
+        userRepository.save(user);
     }
 
     /**
      * 비밀번호 변경
-     * @param token: jwtToken
+     * @param user: 사용자
      * @param changePwd: 현재 비밀번호와 변경할 비밀번호
      */
     @Transactional
-    public void changePassword(String token, ChangePwd changePwd){
-        Long userId = provider.getSubject(token);
-        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
-
+    public void changePassword(User user, ChangePwd changePwd){
+        
         if(!passwordEncoder.matches(changePwd.getCurrentPassword(), user.getPassword())) {
             throw new BadCredentialsException("비밀번호가 일치하지 않습니다.");
         }
@@ -114,14 +112,12 @@ public class AuthService {
 
     /**
      * 사용자 탈퇴
-     * @param token: jwtToken
+     * @param user: 사용자
      * @param deleteReq: 비밀번호 정보
      */
     @Transactional
-    public void deleteUser(String token, DeleteAccountRequest deleteReq) {
-        Long userId = provider.getSubject(token);
-        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
-
+    public void deleteUser(User user, DeleteAccountRequest deleteReq) {
+        
         if(!passwordEncoder.matches(deleteReq.getPassword(), user.getPassword())) {
             throw new BadCredentialsException("비밀번호가 일치하지 않습니다.");
         }

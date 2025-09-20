@@ -1,5 +1,6 @@
 package com.jyk.wordquiz.wordquiz.controller;
 
+import com.jyk.wordquiz.wordquiz.common.auth.AuthUtil;
 import com.jyk.wordquiz.wordquiz.common.excel.UploadExcel;
 import com.jyk.wordquiz.wordquiz.common.exception.ErrorResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.request.UpdateWordRequest;
@@ -8,6 +9,7 @@ import com.jyk.wordquiz.wordquiz.model.dto.request.WordRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.WordCheckResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.Words;
 import com.jyk.wordquiz.wordquiz.model.dto.response.WordsResponse;
+import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.service.WordService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -61,19 +63,19 @@ public class WordController {
     })
     @GetMapping
     public ResponseEntity<?> getWords(Authentication authentication,
-                                         @Parameter(description = "단어장 ID", example = "1")
-                                         @PathVariable Long wordBookId,
+                                     @Parameter(description = "단어장 ID", example = "1")
+                                     @PathVariable Long wordBookId,
 
-                                         @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
-                                         @RequestParam(required = false, defaultValue = "0", value = "page") int page,
+                                     @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
+                                     @RequestParam(required = false, defaultValue = "0", value = "page") int page,
 
-                                         @Parameter(description = "정렬 기준 (id, term, cratedAt", example = "id")
-                                         @RequestParam(required = false, defaultValue = "id", value = "orderby") String criteria,
+                                     @Parameter(description = "정렬 기준 (id, term, cratedAt", example = "id")
+                                     @RequestParam(required = false, defaultValue = "id", value = "orderby") String criteria,
 
-                                         @Parameter(description = "정렬 방향 (ASC, DESC)", example = "DESC")
-                                         @RequestParam(required= false, defaultValue = "DESC", value = "sort") String sort) throws AccessDeniedException {
-        String jwtToken = authentication.getCredentials().toString();
-        WordsResponse result = wordService.getWords(wordBookId, jwtToken, page, criteria, sort.toUpperCase());
+                                     @Parameter(description = "정렬 방향 (ASC, DESC)", example = "DESC")
+                                     @RequestParam(required= false, defaultValue = "DESC", value = "sort") String sort) throws AccessDeniedException {
+        User user = AuthUtil.getCurrentUser(authentication);
+        WordsResponse result = wordService.getWords(wordBookId, user, page, criteria, sort.toUpperCase());
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");
@@ -101,9 +103,9 @@ public class WordController {
                                      @Parameter(description = "단어장 ID") @PathVariable Long wordBookId,
                                      @Parameter(description= "추가할 단어 정보") @RequestBody WordRequest wordReq
     ) throws AccessDeniedException {
-        String jwtToken = authentication.getCredentials().toString();
+        User user = AuthUtil.getCurrentUser(authentication);
 
-        wordService.saveWord(wordBookId, wordReq, jwtToken);
+        wordService.saveWord(wordBookId, wordReq, user);
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");
@@ -137,8 +139,8 @@ public class WordController {
                                      @PathVariable Long wordId,
                                      @Parameter(description = "수정할 단어 정보(다른 단어장 이동 가능)")
                                      @RequestBody UpdateWordRequest updateWordReq) throws AccessDeniedException {
-        String jwtToken = authentication.getCredentials().toString();
-        wordService.updateWord(wordBookId, wordId, updateWordReq, jwtToken);
+        User user = AuthUtil.getCurrentUser(authentication);
+        wordService.updateWord(wordBookId, wordId, updateWordReq, user);
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");
@@ -169,9 +171,9 @@ public class WordController {
                                      @Parameter(description = "단어장 ID") @PathVariable Long wordBookId,
                                      @Parameter(description = "삭제할 단어 ID") @PathVariable Long wordId
     ) throws AccessDeniedException {
-        String jwtToken = authentication.getCredentials().toString();
+        User user = AuthUtil.getCurrentUser(authentication);
 
-        wordService.deleteWord(wordBookId, wordId, jwtToken);
+        wordService.deleteWord(wordBookId, wordId, user);
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");
@@ -197,9 +199,9 @@ public class WordController {
                                             @Parameter(description = "단어장 ID") @PathVariable Long wordBookId,
                                             @Parameter(description = "중복 체크할 단어") @RequestBody WordCheckRequest wordCheckReq
     ) throws AccessDeniedException {
-        String jwtToken = authentication.getCredentials().toString();
+        User user = AuthUtil.getCurrentUser(authentication);
 
-        WordCheckResponse result = wordService.wordCheck(wordCheckReq, wordBookId, jwtToken);
+        WordCheckResponse result = wordService.wordCheck(wordCheckReq, wordBookId, user);
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");
@@ -225,10 +227,10 @@ public class WordController {
                                                     description = "업로드할 Excel 파일 (.xlsx, .xls)",
                                                     content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)
                                             ) @RequestParam("file") MultipartFile file) throws IOException {
-        String jwtToken = authentication.getCredentials().toString();
+        User user = AuthUtil.getCurrentUser(authentication);
         Map<String, String> words = UploadExcel.uploadWordExcel(file);
 
-        List<Words> existingWord = wordService.saveExcelData(words, wordBookId,jwtToken);
+        List<Words> existingWord = wordService.saveExcelData(words, wordBookId, user);
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");

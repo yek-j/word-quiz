@@ -1,18 +1,15 @@
 package com.jyk.wordquiz.wordquiz.controller;
 
-import com.jyk.wordquiz.wordquiz.common.exception.DuplicateUserException;
-import com.jyk.wordquiz.wordquiz.model.dto.request.ChangePwd;
-import com.jyk.wordquiz.wordquiz.model.dto.request.DeleteAccountRequest;
-import com.jyk.wordquiz.wordquiz.model.dto.request.LoginRequest;
-import com.jyk.wordquiz.wordquiz.model.dto.request.SignupRequest;
+import com.jyk.wordquiz.wordquiz.common.auth.AuthUtil;
+import com.jyk.wordquiz.wordquiz.model.dto.request.*;
 import com.jyk.wordquiz.wordquiz.model.dto.response.LoginResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.UserInfoResponse;
+import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -48,17 +45,17 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<?> userInfo(Authentication authentication) {
-        String jwtToken = authentication.getCredentials().toString();
-        UserInfoResponse userInfo = authService.getUserInfo(jwtToken);
+        User user = AuthUtil.getCurrentUser(authentication);
+        UserInfoResponse userInfo = authService.getUserInfo(user);
 
         return ResponseEntity.ok(userInfo);
     }
 
     @PutMapping("/me")
-    public ResponseEntity<?> updateUserInfo(Authentication authentication) {
-        String jwtToken = authentication.getCredentials().toString();
+    public ResponseEntity<?> updateUserInfo(Authentication authentication, @RequestBody UserInfoRequest userInfoRequest) {
+        User user = AuthUtil.getCurrentUser(authentication);
 
-
+        authService.updateUserInfo(user, userInfoRequest);
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");
@@ -69,8 +66,8 @@ public class AuthController {
 
     @PutMapping("/password")
     public ResponseEntity<?> changePassword(Authentication authentication, @RequestBody ChangePwd changePwd) {
-        String jwtToken = authentication.getCredentials().toString();
-        authService.changePassword(jwtToken, changePwd);
+        User user = AuthUtil.getCurrentUser(authentication);
+        authService.changePassword(user, changePwd);
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");
@@ -81,8 +78,8 @@ public class AuthController {
 
     @DeleteMapping("/me")
     public ResponseEntity<?> deleteUser(@RequestBody @Valid DeleteAccountRequest deleteAccountRequest, Authentication authentication) {
-        String jwtToken = authentication.getCredentials().toString();
-        authService.deleteUser(jwtToken, deleteAccountRequest);
+        User user = AuthUtil.getCurrentUser(authentication);
+        authService.deleteUser(user, deleteAccountRequest);
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");

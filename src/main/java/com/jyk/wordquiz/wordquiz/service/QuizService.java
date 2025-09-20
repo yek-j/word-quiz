@@ -1,7 +1,5 @@
 package com.jyk.wordquiz.wordquiz.service;
 
-import com.jyk.wordquiz.wordquiz.common.auth.JwtTokenProvider;
-import com.jyk.wordquiz.wordquiz.common.exception.AuthenticatedUserNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.exception.QuizNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.type.SharingStatus;
 import com.jyk.wordquiz.wordquiz.model.dto.request.QuizParamRequest;
@@ -15,7 +13,6 @@ import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.model.entity.WordBook;
 import com.jyk.wordquiz.wordquiz.repository.QuizRepository;
 import com.jyk.wordquiz.wordquiz.repository.QuizSessionRepository;
-import com.jyk.wordquiz.wordquiz.repository.UserRepository;
 import com.jyk.wordquiz.wordquiz.repository.WordBookRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -36,25 +33,19 @@ public class QuizService {
     @Autowired
     private QuizRepository quizRepository;
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
     private WordBookRepository wordBookRepository;
     @Autowired
     private QuizSessionRepository quizSessionRepository;
-    @Autowired
-    private JwtTokenProvider provider;
 
     /**
      * 퀴즈 생성
-     * @param token: jwt token
+     * @param user: 사용자
      * @param quizParamRequest: 퀴즈 생성을 위한 이름, 설명, 단어장 ID 들, 퀴즈 공개 여부
      */
     @Transactional
-    public void createQuiz(String token, QuizParamRequest quizParamRequest) {
+    public void createQuiz(User user, QuizParamRequest quizParamRequest) {
         List<Long> wordBookIds = parseAndValidateWordBookIds(quizParamRequest.getWordBookIds());
-        Long userId = provider.getSubject(token);
-        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
-
+        
         Quiz newQuiz = new Quiz();
         newQuiz.setName(quizParamRequest.getName());
         newQuiz.setDescription(quizParamRequest.getDescription());
@@ -83,10 +74,7 @@ public class QuizService {
 
     }
 
-    public QuizResponse getQuiz(String token, Long quizId) {
-        Long userId = provider.getSubject(token);
-        User user = userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
-
+    public QuizResponse getQuiz(User user, Long quizId) {
         Quiz quiz = quizRepository.findByCreatedByAndId(user, quizId).orElseThrow(() -> new QuizNotFoundException(quizId));;
 
         List<WordBooks> wordBooks = quiz.getQuizWordBooks().stream().map(WordBooks::new).toList();
@@ -96,17 +84,14 @@ public class QuizService {
 
     /**
      * 퀴즈 리스트 가져오기
-     * @param token: jwt token
+     * @param user: 사용자
      * @param page: page 값
      * @param criteria: orderby
      * @param sort: DESC, ASC
      * @param kind: 공유된 모든 퀴즈보기(ALL), 자신의 퀴즈만 보기(MY)
      * @return : QuizzesResponse
      */
-    public QuizzesResponse getQuizList(String token, int page, String criteria, String sort, String kind) {
-        Long userId = provider.getSubject(token);
-        User user = userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
-
+    public QuizzesResponse getQuizList(User user, int page, String criteria, String sort, String kind) {
         Sort.Direction direction = Sort.Direction.DESC;
 
         if(sort.equals("ASC")) {
@@ -139,7 +124,7 @@ public class QuizService {
         }
 
         if(!quizIds.isEmpty()) {
-            List<QuizSession> quizSessions = quizSessionRepository.findLatestSessionsByUserAndQuizIds(userId, quizIds);
+            List<QuizSession> quizSessions = quizSessionRepository.findLatestSessionsByUserAndQuizIds(user.getId(), quizIds);
 
             Map<Long, Boolean> activeStatusMap = quizSessions.stream()
                     .collect(Collectors.toMap(
@@ -157,16 +142,15 @@ public class QuizService {
 
     /**
      * 퀴즈 수정
-     * @param token: jwt token
+     * @param user: 사용자
      * @param qid: 퀴즈 ID
      * @param quizParamRequest: 퀴즈 수정을 위한 파라미터
      */
     @Transactional
-    public void updateQuiz(String token, Long qid, QuizParamRequest quizParamRequest) {
+    public void updateQuiz(User user, Long qid, QuizParamRequest quizParamRequest) {
         List<Long> wordBookIds = parseAndValidateWordBookIds(quizParamRequest.getWordBookIds());
-        Long userId = provider.getSubject(token);
-        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
-
+        
+        
         // 사용자 본인의 퀴즈만 수정이 가능하다.
         Quiz quiz = quizRepository.findByCreatedByAndId(user, qid).orElseThrow(() -> new QuizNotFoundException(qid));
 
@@ -197,14 +181,11 @@ public class QuizService {
 
     /**
      * 퀴즈 삭제
-     * @param token: jwt token
+     * @param user: 사용자
      * @param qid: 퀴즈 ID
      */
     @Transactional
-    public void deleteQuiz(String token, Long qid) {
-        Long userId = provider.getSubject(token);
-        User user =  userRepository.findById(userId).orElseThrow(() -> new AuthenticatedUserNotFoundException(userId));
-
+    public void deleteQuiz(User user, Long qid) {
         Quiz quiz = quizRepository.findByCreatedByAndId(user, qid).orElseThrow(() -> new QuizNotFoundException(qid));
 
         quizRepository.delete(quiz);
