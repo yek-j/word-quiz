@@ -34,6 +34,16 @@ public class WordService {
     @Autowired
     private WordBookRepository wordBookRepository;
 
+    /**
+     * 단어 목록 조회
+     * @param wordBookId: 단어장 ID
+     * @param user: 사용자
+     * @param page: 페이지
+     * @param criteria: 기준
+     * @param sort: 정렬
+     * @return WordsResponse 반환
+     * @throws AccessDeniedException
+     */
     public WordsResponse getWords(Long wordBookId, User user, int page, String criteria, String sort) throws AccessDeniedException {
         Sort.Direction direction = Sort.Direction.DESC;
 
@@ -63,6 +73,13 @@ public class WordService {
         return new WordsResponse(words, totalPages);
     }
 
+    /**
+     * 단어 저장
+     * @param wordBookId: 단어장 ID
+     * @param wordReq: 단어 정보
+     * @param user: 사용자
+     * @throws AccessDeniedException
+     */
     @Transactional
     public void saveWord(Long wordBookId, WordRequest wordReq, User user) throws AccessDeniedException {
         // 단어장
@@ -90,6 +107,14 @@ public class WordService {
         wordRepository.save(word);
     }
 
+    /**
+     * 단어 수정
+     * @param wordBookId: 단어장 ID
+     * @param wordId: 단어 ID
+     * @param updateWordReq: 수정할 단어 정보
+     * @param user: 사용자
+     * @throws AccessDeniedException
+     */
     @Transactional
     public void updateWord(Long wordBookId, Long wordId, UpdateWordRequest updateWordReq, User user) throws AccessDeniedException {
         // 단어장 권한 확인
@@ -122,6 +147,13 @@ public class WordService {
         wordRepository.save(word);
     }
 
+    /**
+     * 단어 삭제
+     * @param wordBookId: 단어장 ID
+     * @param wordId: 단어 ID
+     * @param user: 사용자
+     * @throws AccessDeniedException
+     */
     public void deleteWord(Long wordBookId, Long wordId, User user) throws AccessDeniedException {
         // 단어장 권한 확인
         WordBook wordBook = wordBookRepository.findById(wordBookId)
@@ -136,6 +168,14 @@ public class WordService {
         wordRepository.delete(word);
     }
 
+    /**
+     * 단어 중복 체크
+     * @param wordCheckReq: 중복체크할 단어
+     * @param wordBookId: 단어장 ID
+     * @param user: 사용자
+     * @return WordCheckResponse 단어 중복 체크 여부
+     * @throws AccessDeniedException
+     */
     public WordCheckResponse wordCheck(WordCheckRequest wordCheckReq, Long wordBookId, User user) throws AccessDeniedException {
         // 단어장 권한 확인
         WordBook wordBook = wordBookRepository.findById(wordBookId)
@@ -159,6 +199,14 @@ public class WordService {
         return word.orElse(null);
     }
 
+    /**
+     * 엑셀로 단어 데이터 저장
+     * @param words: 저장할 단어
+     * @param wordBookId: 단어장 ID
+     * @param user: 사용자
+     * @return 저장된 단어 List
+     * @throws AccessDeniedException
+     */
     @Transactional
     public List<Words> saveExcelData(Map<String, String> words, Long wordBookId, User user) throws AccessDeniedException {
         // 단어장 권한 확인

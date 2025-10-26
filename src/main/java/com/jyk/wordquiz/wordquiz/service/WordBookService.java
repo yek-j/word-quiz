@@ -24,6 +24,14 @@ public class WordBookService {
     @Autowired
     private WordBookRepository wordBookRepository;
 
+    /**
+     * 단어장 리스트 가져오기
+     * @param user: 사용자
+     * @param page: 페이지 번호
+     * @param criteria: 기준
+     * @param sort: 정렬
+     * @return WordBooksResponse: 단어장 리스트
+     */
     public WordBooksResponse getWordBooks(User user, int page, String criteria, String sort) {
         Sort.Direction direction = Sort.Direction.DESC;
 
@@ -45,6 +53,11 @@ public class WordBookService {
         return new WordBooksResponse(wordBooks, totalPages);
     }
 
+    /**
+     * 단어장 저장
+     * @param wordBookReq: 단어장 정보
+     * @param user: 사용자
+     */
     @Transactional
     public void saveWordBook(WordBookRequest wordBookReq, User user) {
         WordBook newWordBook = new WordBook();
@@ -56,6 +69,12 @@ public class WordBookService {
         wordBookRepository.save(newWordBook);
     }
 
+    /**
+     * 단어장 수정
+     * @param id: 단어장 ID
+     * @param wordBookReq: 수정할 단어장 정보
+     * @param user: 사용자
+     */
     @Transactional
     public void updateWordBook(Long id, WordBookRequest wordBookReq, User user) {
         WordBook wordBook = wordBookRepository.findByIdAndCreatedBy(id, user).orElseThrow(() -> new WordBookNotFoundException(id));
@@ -70,6 +89,11 @@ public class WordBookService {
         wordBookRepository.save(wordBook);
     }
 
+    /**
+     * 단어장 삭제
+     * @param id: 단어장 ID
+     * @param user: 사용자
+     */
     @Transactional
     public void deleteWordBook(Long id, User user) {
         WordBook wordBook = wordBookRepository.findByIdAndCreatedBy(id, user).orElseThrow(() -> new WordBookNotFoundException(id));
