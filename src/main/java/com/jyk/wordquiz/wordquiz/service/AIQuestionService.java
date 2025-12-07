@@ -11,14 +11,20 @@ import java.util.Map;
 public class AIQuestionService {
     private final ChatClient chatClient;
 
+    /**
+     * Creates an AIQuestionService and initializes its ChatClient from the provided builder.
+     *
+     * @param geminiChatClientBuilder a configured ChatClient.Builder used to construct the internal ChatClient
+     */
     public AIQuestionService(ChatClient.Builder geminiChatClientBuilder) {
         this.chatClient = geminiChatClientBuilder.build();
     }
 
     /**
-     * 빈칸 퀴즈 생성하기
-     * @param word
-     * @return
+     * Generate a single blank-cloze sentence quiz for the given word.
+     *
+     * @param word the Word containing the term and its description to use when constructing the quiz
+     * @return a BlankQuizResponse with a `sentence` where the term is replaced by `___` and a `translation` with the complete translated sentence
      */
     public BlankQuizResponse generationBlankQuestion(Word word) {
         return chatClient

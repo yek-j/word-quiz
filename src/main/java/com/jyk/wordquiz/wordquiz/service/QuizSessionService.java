@@ -34,11 +34,13 @@ public class QuizSessionService {
     private static final String KEY_ORDER = "Order";
 
     /**
-     * 퀴즈 시작으로 신규 세션 생성
-     * 아직 완료하지 않은 퀴즈면 기존 세션 정보 반환
-     * @param user: 사용자
-     * @param quizStartReq: 퀴즈 시작을 위한 정보
-     * @return 퀴즈 세션 정보
+     * Start a quiz session for the given user: return an existing active session if one exists,
+     * otherwise create and persist a new session with up to 20 questions based on the specified quiz and type.
+     *
+     * @param user the user starting the quiz
+     * @param quizStartReq request data containing the target quiz ID and desired quiz type
+     * @return a QuizSessionResponse containing the session ID, the list of problems (with translation when applicable), and the quiz type
+     * @throws QuizNotFoundException if the quiz does not exist or the user is not permitted to start it
      */
     @Transactional
     public QuizSessionResponse startQuiz(User user, QuizStartRequest quizStartReq) {
