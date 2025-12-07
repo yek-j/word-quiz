@@ -6,10 +6,7 @@ import com.jyk.wordquiz.wordquiz.common.type.QuizType;
 import com.jyk.wordquiz.wordquiz.common.type.SharingStatus;
 import com.jyk.wordquiz.wordquiz.model.dto.request.QuizAnswerRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.request.QuizStartRequest;
-import com.jyk.wordquiz.wordquiz.model.dto.response.QuizAnswerResponse;
-import com.jyk.wordquiz.wordquiz.model.dto.response.QuizProblem;
-import com.jyk.wordquiz.wordquiz.model.dto.response.QuizResultResponse;
-import com.jyk.wordquiz.wordquiz.model.dto.response.QuizSessionResponse;
+import com.jyk.wordquiz.wordquiz.model.dto.response.*;
 import com.jyk.wordquiz.wordquiz.model.entity.*;
 import com.jyk.wordquiz.wordquiz.repository.QuizRepository;
 import com.jyk.wordquiz.wordquiz.repository.QuizSessionRepository;
@@ -29,6 +26,8 @@ public class QuizSessionService {
     private QuizRepository quizRepository;
     @Autowired
     private QuizSessionRepository quizSessionRepository;
+    @Autowired
+    private AIQuestionService aiQuestionService;
 
     private static final String KEY_ANSWER = "Answer";
     private static final String KEY_CORRECT = "Correct";
@@ -60,15 +59,21 @@ public class QuizSessionService {
 
                 String p = word.getDescription();
                 String a = word.getTerm();
+                String t = "";
 
                 if(quizStartReq.getQuizType() == QuizType.WORD_TO_MEANING) {
                     p = word.getTerm();
                     a = word.getDescription();
                 }
+                else if(quizStartReq.getQuizType() == QuizType.AI_FILL_IN_BLANK) {
+                    p = q.getAiGeneratedSentence();
+                    a = word.getTerm();
+                    t = q.getAiGeneratedTranslation();
+                }
 
                 // 채점되지 않은 답은 보여주지 않는다.
                 String displayAnswer = (q.getIsCorrect() != null) ? a : null;
-                activeProblems.add(new QuizProblem(word.getId(), p, displayAnswer, q.getIsCorrect()));
+                activeProblems.add(new QuizProblem(word.getId(), p, displayAnswer, t, q.getIsCorrect()));
             }
 
             return new QuizSessionResponse(activeSession.get().getId(), activeProblems, activeSession.get().getQuizType());
@@ -114,17 +119,27 @@ public class QuizSessionService {
             question.setWord(w);
             question.setQuestionOrder(i++);
             question.setIsCorrect(null);
-            quizSession.addQuestion(question);
 
             String problem = w.getDescription();
             String answer = null;
+            String translation = null;
 
             if(quizStartReq.getQuizType() == QuizType.WORD_TO_MEANING) {
                 problem = w.getTerm();
-                answer = null;
+            }
+            else if(quizStartReq.getQuizType() == QuizType.AI_FILL_IN_BLANK) {
+                BlankQuizResponse blankProblem = aiQuestionService.generationBlankQuestion(w);
+
+                problem = blankProblem.sentence();
+                translation = blankProblem.translation();
+
+                question.setAiGeneratedSentence(problem);
+                question.setAiGeneratedTranslation(translation);
             }
 
-            QuizProblem qp = new QuizProblem(w.getId(), problem, answer, null);
+            quizSession.addQuestion(question);
+
+            QuizProblem qp = new QuizProblem(w.getId(), problem, answer, translation, null);
             problemList.add(qp);
         }
 

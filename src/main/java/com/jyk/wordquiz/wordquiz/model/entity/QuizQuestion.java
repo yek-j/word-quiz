@@ -20,6 +20,12 @@ public class QuizQuestion {
     @JoinColumn(name = "word_id", nullable = false)
     private Word word;
 
+    @Column(name = "ai_generated_sentence")
+    private String aiGeneratedSentence;
+
+    @Column(name = "ai_generated_translation")
+    private String aiGeneratedTranslation;
+
     @Column(name = "question_order", nullable = false)
     private int questionOrder;
 

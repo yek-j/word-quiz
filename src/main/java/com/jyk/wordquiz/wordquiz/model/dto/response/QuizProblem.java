@@ -11,5 +11,6 @@ public class QuizProblem {
     private Long wordId;
     private String problem;
     private String answer;
+    private String translation;
     private Boolean result;
 }
