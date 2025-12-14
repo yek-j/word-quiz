@@ -11,18 +11,22 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "user_connection")
+@Table(name = "user_connection",
+    uniqueConstraints = @UniqueConstraint(
+            columnNames = {"from_user_id", "to_user_id"}
+    )
+)
 @Getter
 @Setter
 public class UserConnection {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "from_user_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "from_user_id", nullable = false)
     private User fromUser;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "to_user_id")
     private User toUser;
 
