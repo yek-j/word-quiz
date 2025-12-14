@@ -27,7 +27,7 @@ public class UserConnection {
     private User fromUser;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "to_user_id")
+    @JoinColumn(name = "to_user_id", nullable = false)
     private User toUser;
 
     @Enumerated(EnumType.STRING)
