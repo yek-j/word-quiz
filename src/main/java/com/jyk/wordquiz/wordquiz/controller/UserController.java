@@ -1,9 +1,11 @@
 package com.jyk.wordquiz.wordquiz.controller;
 
 import com.jyk.wordquiz.wordquiz.common.auth.AuthUtil;
+import com.jyk.wordquiz.wordquiz.model.dto.response.UsersResponse;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -35,10 +36,14 @@ public class UserController {
     })
     @GetMapping("/search")
     public ResponseEntity<?> getUsers(Authentication authentication,
-                                      @RequestParam String username) {
+                                      @Parameter(description = "검색할 사용자 이름")
+                                      @RequestParam(defaultValue = "") String username,
+
+                                      @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
+                                      @RequestParam(required = false, defaultValue = "0", value = "page") int page) {
         User user = AuthUtil.getCurrentUser(authentication);
 
-        List<String> result = userService.getUserList(user, username);
+        UsersResponse result = userService.getUserList(user, username, page);
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");
