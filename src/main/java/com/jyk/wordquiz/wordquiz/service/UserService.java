@@ -22,7 +22,7 @@ public class UserService {
      * @param user: 사용자
      * @param username: 검색할 사용자
      * @param page: 페이지 번호
-     * @return List<String>: 사용자 이름 리스트
+     * @return UsersResponse: 사용자 이름 리스트
      */
     public UsersResponse getUserList(User user, String username, int page) {
         if (username.isBlank()) {
@@ -35,7 +35,7 @@ public class UserService {
 
         List<String> usernameList = findUsernames.getContent().stream().map(User::getUsername).toList();
 
-        int totalPages = usernameList.size();
+        int totalPages = findUsernames.getTotalPages();
 
         return new UsersResponse(usernameList, totalPages);
     }
