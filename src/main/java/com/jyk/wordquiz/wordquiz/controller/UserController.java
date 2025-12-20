@@ -3,6 +3,10 @@ package com.jyk.wordquiz.wordquiz.controller;
 import com.jyk.wordquiz.wordquiz.common.auth.AuthUtil;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -17,10 +21,18 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/users")
+@Tag(name="사용자 관리", description = "사용자 관리 API")
 public class UserController {
     @Autowired
     private UserService userService;
 
+    @Operation(summary = "사용자 조회", description = "사용자 이름으로 친구 추가할 목록을 검색한다.")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "사용자 목록 조회 성공"
+            )
+    })
     @GetMapping("/search")
     public ResponseEntity<?> getUsers(Authentication authentication,
                                       @RequestParam String username) {
