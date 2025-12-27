@@ -31,11 +31,11 @@ public class UserConnection {
     private User toUser;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "connection_type", nullable = false)
+    @Column(name = "connection_type", nullable = false, columnDefinition = "VARCHAR(20)")
     private UserConnectionType connectionType;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "connection_status", nullable = false)
+    @Column(name = "connection_status", nullable = false, columnDefinition = "VARCHAR(20)")
     private UserConnectionStatus connectionStatus;
 
     @Column(name = "created_at", nullable = false, updatable = false)
