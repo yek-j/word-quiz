@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "user_connection",
     uniqueConstraints = @UniqueConstraint(
-            columnNames = {"from_user_id", "to_user_id"}
+            columnNames = {"user_id", "target_user_id"}
     )
 )
 @Getter
