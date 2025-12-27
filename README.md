@@ -66,15 +66,15 @@
 | isCorrect        | BIT(1)   | Boolean | NULL     | 정답 여부    |
 
 ### UserConnection (사용자 관계 - 친구)
-| 필드명           | Java 타입        | MySQL 타입   | 제약조건                              | 설명           |
-|------------------|------------------|--------------|---------------------------------------|----------------|
-| id               | Long             | BIGINT       | PK, AUTO_INCREMENT                    | 고유 식별자     |
-| fromUser         | User             | BIGINT       | FK(Users.id), NOT NULL                | 행동 주체 사용자 ID |
-| toUser           | User             | BIGINT       | FK(Users.id), NOT NULL                | 대상 사용자 ID   |
-| connectionType   | Enum(FRIEND, BLOCK) | VARCHAR(20) | NOT NULL                              | 관계 종류       |
-| connectionStatus | Enum(PENDING, ACCEPTED, REJECTED) | VARCHAR(20) | NOT NULL               | 관계 상태       |
-| createdAt        | LocalDateTime    | DATETIME     | NOT NULL, DEFAULT CURRENT_TIMESTAMP   | 생성 시간       |
-| updatedAt        | LocalDateTime    | DATETIME     | NOT NULL, DEFAULT CURRENT_TIMESTAMP   | 상태 변경 시간   |
+| 필드명              | Java 타입        | MySQL 타입   | 제약조건                              | 설명      |
+|------------------|------------------|--------------|---------------------------------------|-----------|
+| id               | Long             | BIGINT       | PK, AUTO_INCREMENT                    | 고유 식별자 |
+| user             | User             | BIGINT       | FK(Users.id), NOT NULL                | 사용자  |
+| targetUser       | User             | BIGINT       | FK(Users.id), NOT NULL                | 대상 사용자 |
+| connectionType   | Enum(FRIEND, BLOCK) | VARCHAR(20) | NOT NULL                              | 관계 종류  |
+| connectionStatus | Enum(PENDING, ACCEPTED, REJECTED) | VARCHAR(20) | NOT NULL               | 관계 상태  |
+| createdAt        | LocalDateTime    | DATETIME     | NOT NULL, DEFAULT CURRENT_TIMESTAMP   | 생성 시간  |
+| updatedAt        | LocalDateTime    | DATETIME     | NOT NULL, DEFAULT CURRENT_TIMESTAMP   | 상태 변경 시간 |
 
 ## API EndPoint
 

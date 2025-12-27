@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "user_connection",
     uniqueConstraints = @UniqueConstraint(
-            columnNames = {"from_user_id", "to_user_id"}
+            columnNames = {"user_id", "target_user_id"}
     )
 )
 @Getter
@@ -23,19 +23,19 @@ public class UserConnection {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "from_user_id", nullable = false)
-    private User fromUser;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "to_user_id", nullable = false)
-    private User toUser;
+    @JoinColumn(name = "target_user_id", nullable = false)
+    private User targetUser;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "connection_type", nullable = false)
+    @Column(name = "connection_type", nullable = false, columnDefinition = "VARCHAR(20)")
     private UserConnectionType connectionType;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "connection_status", nullable = false)
+    @Column(name = "connection_status", nullable = false, columnDefinition = "VARCHAR(20)")
     private UserConnectionStatus connectionStatus;
 
     @Column(name = "created_at", nullable = false, updatable = false)
