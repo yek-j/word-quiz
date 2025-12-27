@@ -23,12 +23,12 @@ public class UserConnection {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "from_user_id", nullable = false)
-    private User fromUser;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "to_user_id", nullable = false)
-    private User toUser;
+    @JoinColumn(name = "target_user_id", nullable = false)
+    private User targetUser;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "connection_type", nullable = false, columnDefinition = "VARCHAR(20)")
