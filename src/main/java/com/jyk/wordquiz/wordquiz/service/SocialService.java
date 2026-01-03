@@ -62,7 +62,7 @@ public class SocialService {
                     LocalDateTime updateTime = connection.getUpdatedAt();
 
                     // 친구 거절 24시간 후 다시 요청 가능
-                    if(now.plusDays(1).isAfter(updateTime)) {
+                    if(updateTime.plusDays(1).isAfter(now)) {
                         connection.setConnectionStatus(UserConnectionStatus.PENDING);
                         userConnectionRepository.save(connection);
                         return new FriendRequestResult(HttpStatus.CREATED, "친구 요청 성공");
@@ -118,6 +118,10 @@ public class SocialService {
         // targetID로 사용자 검색
         UserConnection userConnection = userConnectionRepository.findByUserAndTargetUser(friendRequestUser, user)
                 .orElseThrow(() -> new UserConnectionNotFoundException(user.getId(), friendRequestId));
+
+        if(userConnection.getConnectionStatus() != UserConnectionStatus.PENDING) {
+            throw new IllegalArgumentException("수락할 수 없는 상태의 친구 요청입니다.");
+        }
 
         // 요청받은 사용자를 targetId로 UserConnection 생성
         UserConnection newUserConnection = new UserConnection();

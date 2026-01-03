@@ -17,6 +17,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -48,7 +50,7 @@ public class SocialController {
     })
     @PostMapping("/friend-requests")
     public ResponseEntity<?> friendRequest(Authentication authentication,
-                                           @RequestBody FriendRequest friendRequest) {
+                                           @Valid @RequestBody FriendRequest friendRequest) {
         User user = AuthUtil.getCurrentUser(authentication);
 
         FriendRequestResult result = socialService.friendRequest(user, friendRequest);
@@ -77,7 +79,7 @@ public class SocialController {
     @GetMapping("/friend-requests")
     public ResponseEntity<?> getFriendRequests(Authentication authentication,
                                                @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
-                                               @RequestParam(required = false, defaultValue = "0", value = "page") int page) {
+                                               @RequestParam(required = false, defaultValue = "0", value = "page") @Min(0) int page) {
         User user = AuthUtil.getCurrentUser(authentication);
 
         FriendsResponse result = socialService.getFriendRequestList(user, page);
@@ -144,7 +146,7 @@ public class SocialController {
     @GetMapping("/friends")
     public ResponseEntity<?> getFriends(Authentication authentication,
                                         @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
-                                        @RequestParam(required = false, defaultValue = "0", value = "page") int page) {
+                                        @RequestParam(required = false, defaultValue = "0", value = "page") @Min(0) int page) {
         User user = AuthUtil.getCurrentUser(authentication);
 
         FriendsResponse result = socialService.getFriendList(user, page);
