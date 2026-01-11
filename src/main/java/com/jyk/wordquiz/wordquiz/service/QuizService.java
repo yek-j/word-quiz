@@ -105,6 +105,7 @@ public class QuizService {
 
         if (kind.equals("MY")) {
             if (searchId != null && Objects.equals(user.getId(), searchId)) findQuizzes = quizRepository.findByCreatedBy(user, pageReq);
+            else if(searchId == null) findQuizzes = quizRepository.findByCreatedBy(user, pageReq);
         } else {
             if(searchId != null) {
                 findQuizzes = quizRepository.findSearchIdQuizzes(user, searchId, pageReq);
