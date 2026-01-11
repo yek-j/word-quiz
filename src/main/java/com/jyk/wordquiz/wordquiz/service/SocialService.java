@@ -62,7 +62,7 @@ public class SocialService {
                     LocalDateTime updateTime = connection.getUpdatedAt();
 
                     // 친구 거절 24시간 후 다시 요청 가능
-                    if(updateTime.plusDays(1).isAfter(now)) {
+                    if(now.isAfter(updateTime.plusDays(1))) {
                         connection.setConnectionStatus(UserConnectionStatus.PENDING);
                         userConnectionRepository.save(connection);
                         return new FriendRequestResult(HttpStatus.CREATED, "친구 요청 성공");
