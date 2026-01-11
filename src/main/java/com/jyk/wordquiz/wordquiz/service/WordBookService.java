@@ -21,8 +21,11 @@ import java.util.List;
 @Slf4j
 @Service
 public class WordBookService {
-    @Autowired
-    private WordBookRepository wordBookRepository;
+    private final WordBookRepository wordBookRepository;
+
+    public WordBookService(WordBookRepository wordBookRepository) {
+        this.wordBookRepository = wordBookRepository;
+    }
 
     /**
      * 단어장 리스트 가져오기
@@ -63,8 +66,7 @@ public class WordBookService {
         WordBook newWordBook = new WordBook();
         newWordBook.setName(wordBookReq.getName());
         newWordBook.setDescription(wordBookReq.getDescription());
-
-        user.addWordBook(newWordBook);
+        newWordBook.setCreatedBy(user);
 
         wordBookRepository.save(newWordBook);
     }
