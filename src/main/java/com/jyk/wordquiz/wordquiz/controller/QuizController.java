@@ -38,10 +38,11 @@ public class QuizController {
     public ResponseEntity<?> getQuizList(Authentication authentication, @RequestParam(required = false, defaultValue = "0", value = "page") int page,
                                          @RequestParam(required = false, defaultValue = "id", value = "orderby") String criteria,
                                          @RequestParam(required= false, defaultValue = "DESC", value = "sort") String sort,
-                                         @RequestParam(required = false, defaultValue = "ALL", value = "kind") String kind) {
+                                         @RequestParam(required = false, defaultValue = "ALL", value = "kind") String kind,
+                                         @RequestParam(required = false, value = "searchId") Long searchId) {
         
         User user = AuthUtil.getCurrentUser(authentication);
-        QuizzesResponse result = quizService.getQuizList(user, page, criteria, sort.toUpperCase(), kind);
+        QuizzesResponse result = quizService.getQuizList(user, page, criteria, sort.toUpperCase(), kind, searchId);
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");

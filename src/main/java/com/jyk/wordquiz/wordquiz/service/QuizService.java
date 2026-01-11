@@ -1,7 +1,6 @@
 package com.jyk.wordquiz.wordquiz.service;
 
 import com.jyk.wordquiz.wordquiz.common.exception.QuizNotFoundException;
-import com.jyk.wordquiz.wordquiz.common.type.SharingStatus;
 import com.jyk.wordquiz.wordquiz.model.dto.request.QuizParamRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.QuizResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.Quizzes;
@@ -84,14 +83,16 @@ public class QuizService {
 
     /**
      * 퀴즈 리스트 가져오기
-     * @param user: 사용자
-     * @param page: page 값
-     * @param criteria: orderby
-     * @param sort: DESC, ASC
-     * @param kind: 공유된 모든 퀴즈보기(ALL), 자신의 퀴즈만 보기(MY)
+     *
+     * @param user     : 사용자
+     * @param page     : page 값
+     * @param criteria : orderby
+     * @param sort     : DESC, ASC
+     * @param kind     : 볼 수 있는 모든 퀴즈보기(ALL), 자신의 퀴즈만 보기(MY), 친구만 보기(FRIENDS)
+     * @param searchId : 검색하려는 사용자 ID
      * @return : QuizzesResponse
      */
-    public QuizzesResponse getQuizList(User user, int page, String criteria, String sort, String kind) {
+    public QuizzesResponse getQuizList(User user, int page, String criteria, String sort, String kind, Long searchId) {
         Sort.Direction direction = Sort.Direction.DESC;
 
         if(sort.equals("ASC")) {
@@ -102,9 +103,17 @@ public class QuizService {
 
         Page<Quiz> findQuizzes = null;
 
-        if(kind.equals("MY")) findQuizzes = quizRepository.findByCreatedBy(user, pageReq);
-        else if(kind.equals("ALL")) findQuizzes = quizRepository.findBySharingStatusOrMy(SharingStatus.PUBLIC, user, pageReq);
-        // TODO: FRIENDS
+        if (kind.equals("MY")) {
+            if (searchId != null && Objects.equals(user.getId(), searchId)) findQuizzes = quizRepository.findByCreatedBy(user, pageReq);
+            else if(searchId == null) findQuizzes = quizRepository.findByCreatedBy(user, pageReq);
+        } else {
+            if(searchId != null) {
+                findQuizzes = quizRepository.findSearchIdQuizzes(user, searchId, pageReq);
+            } else {
+                if (kind.equals("FRIENDS")) findQuizzes = quizRepository.findByFriendQuizzes(user, pageReq);
+                else findQuizzes = quizRepository.findAccessibleQuizzes(user, pageReq);
+            }
+        }
 
         if(findQuizzes == null) {
             return new QuizzesResponse(null, 0);

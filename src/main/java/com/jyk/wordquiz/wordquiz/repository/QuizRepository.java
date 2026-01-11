@@ -16,6 +16,37 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
 
     Optional<Quiz> findByCreatedByAndId(User user, Long id);
 
-    @Query("SELECT q FROM Quiz q WHERE q.createdBy = :user OR (q.sharingStatus = :status AND q.createdBy != :user)")
-    Page<Quiz> findBySharingStatusOrMy(@Param("status") SharingStatus status, @Param("user") User user, Pageable pageable);
+    // 친구의 'PUBLIC', 'FRIENDS' 공개 상태를 모두 가져오기
+    @Query("SELECT q FROM Quiz q WHERE " +
+            "(q.createdBy IN(" +
+            "SELECT uc.targetUser FROM UserConnection uc " +
+            "WHERE uc.user = :user AND uc.connectionStatus = 'ACCEPTED'" +
+            ") AND q.sharingStatus in ('PUBLIC', 'FRIENDS')) "
+    )
+    Page<Quiz> findByFriendQuizzes(@Param("user") User user,  Pageable pageable);
+
+    // 사용자 본인의 PUBLIC, PRIVATE, FRIENDS
+    // 타인의 PUBLIC, 친구의 FRIENDS인 퀴즈 가져오기
+    @Query("SELECT q FROM Quiz q WHERE " +
+            "q.sharingStatus = 'PUBLIC' " +
+            "OR q.createdBy = :user " +
+            "OR (q.createdBy IN(" +
+                "SELECT uc.targetUser FROM UserConnection uc " +
+                "WHERE uc.user = :user AND uc.connectionStatus = 'ACCEPTED'" +
+            ") AND q.sharingStatus = 'FRIENDS')"
+    )
+    Page<Quiz> findAccessibleQuizzes(@Param("user") User user, Pageable pageable);
+
+    // 특정 사용자 퀴즈 검색
+    @Query("SELECT q FROM Quiz q WHERE " +
+            "q.createdBy.id = :searchId " +
+            "AND (q.sharingStatus = 'PUBLIC' " +
+            "     OR (q.createdBy IN(" +
+                "SELECT uc.targetUser FROM UserConnection uc " +
+                "WHERE uc.user = :user AND uc.connectionStatus = 'ACCEPTED'" +
+            ") AND q.sharingStatus = 'FRIENDS'))"
+    )
+    Page<Quiz> findSearchIdQuizzes(@Param("user") User user,
+                                   @Param("searchId") Long searchId,
+                                   Pageable pageable);
 }
