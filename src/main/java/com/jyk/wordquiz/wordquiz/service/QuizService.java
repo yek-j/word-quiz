@@ -88,7 +88,7 @@ public class QuizService {
      * @param page     : page 값
      * @param criteria : orderby
      * @param sort     : DESC, ASC
-     * @param kind     : 공유된 모든 퀴즈보기(ALL), 자신의 퀴즈만 보기(MY)
+     * @param kind     : 볼 수 있는 모든 퀴즈보기(ALL), 자신의 퀴즈만 보기(MY), 친구만 보기(FRIENDS)
      * @param searchId : 검색하려는 사용자 ID
      * @return : QuizzesResponse
      */
@@ -103,12 +103,15 @@ public class QuizService {
 
         Page<Quiz> findQuizzes = null;
 
-        if(searchId != null) {
-            findQuizzes = quizRepository.findSearchIdQuizzes(user, searchId, pageReq);
+        if (kind.equals("MY")) {
+            if (searchId != null && Objects.equals(user.getId(), searchId)) findQuizzes = quizRepository.findByCreatedBy(user, pageReq);
         } else {
-            if (kind.equals("MY")) findQuizzes = quizRepository.findByCreatedBy(user, pageReq);
-            else if (kind.equals("FRIENDS")) findQuizzes = quizRepository.findByFriendQuizzes(user, pageReq);
-            else findQuizzes = quizRepository.findAccessibleQuizzes(user, pageReq);
+            if(searchId != null) {
+                findQuizzes = quizRepository.findSearchIdQuizzes(user, searchId, pageReq);
+            } else {
+                if (kind.equals("FRIENDS")) findQuizzes = quizRepository.findByFriendQuizzes(user, pageReq);
+                else findQuizzes = quizRepository.findAccessibleQuizzes(user, pageReq);
+            }
         }
 
         if(findQuizzes == null) {
