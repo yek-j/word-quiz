@@ -29,10 +29,13 @@ import java.util.*;
 @Service
 @Slf4j
 public class WordService {
-    @Autowired
-    private WordRepository wordRepository;
-    @Autowired
-    private WordBookRepository wordBookRepository;
+    private final WordRepository wordRepository;
+    private final WordBookRepository wordBookRepository;
+
+    public WordService(WordRepository wordRepository, WordBookRepository wordBookRepository) {
+        this.wordRepository = wordRepository;
+        this.wordBookRepository = wordBookRepository;
+    }
 
     /**
      * 단어 목록 조회
@@ -101,8 +104,7 @@ public class WordService {
         Word word = new Word();
         word.setTerm(wordReq.getTerm());
         word.setDescription(wordReq.getDescription());
-
-        wordBook.addWord(word);
+        word.setWordBook(wordBook);
 
         wordRepository.save(word);
     }

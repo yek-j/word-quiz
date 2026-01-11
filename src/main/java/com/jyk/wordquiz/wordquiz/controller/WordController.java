@@ -41,8 +41,11 @@ import java.util.Map;
 @Slf4j
 @Tag(name="단어 관리", description = "단어장 내 단어 CURD API")
 public class WordController {
-    @Autowired
-    private WordService wordService;
+    private final WordService wordService;
+
+    public WordController(WordService wordService) {
+        this.wordService = wordService;
+    }
 
     @Operation(summary = "단어 목록 조회", description = "특정 단어장의 단어 목록을 페이징하여 조회합니다.")
     @ApiResponses(value = {
