@@ -19,6 +19,8 @@ import java.util.*;
 @RequiredArgsConstructor
 @Component
 public class JwtTokenProvider {
+    private static final long ACCESS_TOKEN_EXPIRE = 15 * 60 * 1000; // 15분
+    private static final long REFRESH_TOKEN_EXPIRE = 7 * 24 * 60 * 60 * 1000; // 7일
 
     @Value("${jwt.secret.key}")
     private String salt;
@@ -32,21 +34,33 @@ public class JwtTokenProvider {
     }
 
     /**
-     * jwt 토큰 생성
+     * AccessToken(JWT) 토큰 생성
      * @param user
      * @return
      */
-    public final String createJwt(User user) {
-        // 시간설정
+    public final String createAccessToken(User user) {
         long nowMillis = System.currentTimeMillis();
-        long expMillis = nowMillis + 24 * 60 * 60 * 1000; // 24시간
-        Date exp = new Date(expMillis);
 
         return Jwts.builder()
                 .subject(user.getId().toString())
-                .expiration(exp)
+                .expiration(new Date(nowMillis + ACCESS_TOKEN_EXPIRE))
                 .claim("email", user.getEmail())
                 .claim("username", user.getUsername())
+                .signWith(secretKey)
+                .compact();
+    }
+
+    /**
+     * Refresh Token 생성
+     * @param userId: 사용자 ID
+     * @return refreshToken
+     */
+    public String createRefreshToken(Long userId) {
+        long nowMillis = System.currentTimeMillis();
+
+        return Jwts.builder()
+                .subject(userId.toString())
+                .expiration(new Date(nowMillis + REFRESH_TOKEN_EXPIRE))
                 .signWith(secretKey)
                 .compact();
     }
@@ -79,6 +93,17 @@ public class JwtTokenProvider {
         }
     }
 
+    public boolean validateRefreshToken(String token) {
+        try {
+            Jws<Claims> claims = Jwts.parser()
+                    .verifyWith(secretKey).build()
+                    .parseSignedClaims(token);
+            return !claims.getPayload().getExpiration().before(new Date());
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     public String getEmail(String token) {
         token = token.split(" ")[1].trim();
         Jws<Claims> claimsJwt = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token);
@@ -87,7 +112,6 @@ public class JwtTokenProvider {
     }
 
     public final Long getSubject(String token) {
-        token = token.split(" ")[1].trim();
         Jws<Claims> claimsJwt = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token);
         String subject = claimsJwt.getPayload().getSubject();
         return Long.valueOf(subject);
