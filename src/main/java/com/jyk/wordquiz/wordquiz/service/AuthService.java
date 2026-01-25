@@ -17,12 +17,18 @@ import java.util.Optional;
 
 @Service
 public class AuthService {
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private JwtTokenProvider provider;
+
+    private final RefreshTokenService refreshTokenService;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider provider;
+
+    public AuthService(RefreshTokenService refreshTokenService, UserRepository userRepository, PasswordEncoder passwordEncoder, JwtTokenProvider provider) {
+        this.refreshTokenService = refreshTokenService;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.provider = provider;
+    }
 
     /**
      * 회원가입
@@ -60,10 +66,14 @@ public class AuthService {
             throw new BadCredentialsException("로그인에 실패했습니다.");
         }
 
+        String refreshToken = provider.createRefreshToken(user.getId());
+        refreshTokenService.refreshTokenSave(user.getId(), refreshToken);
+
         return LoginResponse.builder()
                 .username(user.getUsername())
                 .email(user.getEmail())
-                .token(provider.createJwt(user))
+                .accessToken(provider.createAccessToken(user))
+                .refreshToken(refreshToken)
                 .build();
     }
 
@@ -123,5 +133,29 @@ public class AuthService {
         }
 
         userRepository.delete(user);
+    }
+
+    /**
+     * refresh token 검증 후 access token 발급
+     * @param refreshToken: 토큰
+     * @return new access token
+     */
+    public String refreshAccessToken(String refreshToken) {
+        // 유효기간 확인
+        if(!provider.validateRefreshToken(refreshToken)) return "";
+
+        // userId 가져오기
+        Long userId = provider.getSubject(refreshToken);
+
+        String redisRefreshToken = refreshTokenService.findRefreshToken(userId);
+
+        if (refreshToken.equals(redisRefreshToken)) {
+            Optional<User> user = userRepository.findById(userId);
+            if (user.isPresent()) {
+                return provider.createAccessToken(user.get());
+            }
+        }
+
+        return "";
     }
 }
