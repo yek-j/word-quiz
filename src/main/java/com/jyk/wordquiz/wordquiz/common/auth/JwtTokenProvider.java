@@ -19,8 +19,10 @@ import java.util.*;
 @RequiredArgsConstructor
 @Component
 public class JwtTokenProvider {
-    private static final long ACCESS_TOKEN_EXPIRE = 15 * 60 * 1000; // 15분
-    private static final long REFRESH_TOKEN_EXPIRE = 7 * 24 * 60 * 60 * 1000; // 7일
+    @Value("${jwt.access-token-expire-minutes}")
+    private long ACCESS_TOKEN_EXPIRE;
+    @Value("${jwt.refresh-token-expire-days}")
+    private long REFRESH_TOKEN_EXPIRE; // 7일
 
     @Value("${jwt.secret.key}")
     private String salt;
@@ -43,7 +45,7 @@ public class JwtTokenProvider {
 
         return Jwts.builder()
                 .subject(user.getId().toString())
-                .expiration(new Date(nowMillis + ACCESS_TOKEN_EXPIRE))
+                .expiration(new Date(nowMillis + ACCESS_TOKEN_EXPIRE * 60 * 1000))
                 .claim("email", user.getEmail())
                 .claim("username", user.getUsername())
                 .signWith(secretKey)
@@ -60,7 +62,7 @@ public class JwtTokenProvider {
 
         return Jwts.builder()
                 .subject(userId.toString())
-                .expiration(new Date(nowMillis + REFRESH_TOKEN_EXPIRE))
+                .expiration(new Date(nowMillis + REFRESH_TOKEN_EXPIRE * 24 * 60 * 60 * 1000))
                 .signWith(secretKey)
                 .compact();
     }

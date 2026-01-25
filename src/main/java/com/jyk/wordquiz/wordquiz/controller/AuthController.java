@@ -6,7 +6,6 @@ import com.jyk.wordquiz.wordquiz.model.dto.response.LoginResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.UserInfoResponse;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.service.AuthService;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -61,6 +60,27 @@ public class AuthController {
         return ResponseEntity.ok(body);
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(Authentication authentication,
+                                    HttpServletResponse response) {
+        User user = AuthUtil.getCurrentUser(authentication);
+
+        // redis에서 refreshToken 삭제
+        authService.deleteRefreshToken(user.getId());
+
+        // 쿠키 만료 시키기
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Strict")
+                .build();
+        response.addHeader("Set-Cookie", cookie.toString());
+
+        return ResponseEntity.ok("로그아웃 완료");
+    }
+
     @GetMapping("/me")
     public ResponseEntity<?> userInfo(Authentication authentication) {
         User user = AuthUtil.getCurrentUser(authentication);
@@ -109,17 +129,7 @@ public class AuthController {
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(HttpServletRequest request) {
         // 쿠키에서 refreshToken 꺼내기
-        String refreshToken = null;
-        Cookie[] cookies = request.getCookies();
-
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("refreshToken".equals(cookie.getName())) {
-                    refreshToken = cookie.getValue();
-                    break;
-                }
-            }
-        }
+        String refreshToken = authService.getRefreshToken(request);
 
         if (refreshToken == null) {
             return ResponseEntity.status(401).body("Refresh Token이 없습니다.");

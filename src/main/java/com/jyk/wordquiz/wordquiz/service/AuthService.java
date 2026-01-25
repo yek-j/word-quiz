@@ -7,8 +7,11 @@ import com.jyk.wordquiz.wordquiz.model.dto.response.LoginResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.UserInfoResponse;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.repository.UserRepository;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -157,5 +160,34 @@ public class AuthService {
         }
 
         return "";
+    }
+
+    /**
+     * Cookie에서 RefreshToken 가져오기
+     * @param request: HttpServletRequest
+     * @return Refresh Token
+     */
+    public String getRefreshToken(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        String refreshToken = null;
+
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("refreshToken".equals(cookie.getName())) {
+                    refreshToken = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        return refreshToken;
+    }
+
+    /**
+     * Redis에서 Refresh Token 삭제
+     * @param userId: 사용자 ID
+     */
+    public void deleteRefreshToken(Long userId) {
+        refreshTokenService.deleteRefreshToken(userId);
     }
 }
