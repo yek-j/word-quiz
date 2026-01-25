@@ -6,7 +6,6 @@ import com.jyk.wordquiz.wordquiz.model.dto.response.LoginResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.UserInfoResponse;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.service.AuthService;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;

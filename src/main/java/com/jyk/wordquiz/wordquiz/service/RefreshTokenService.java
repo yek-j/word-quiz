@@ -1,5 +1,6 @@
 package com.jyk.wordquiz.wordquiz.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -8,7 +9,8 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class RefreshTokenService {
     private static final String REFRESH_TOKEN_KEY = "refresh-token-";
-    private static final long REFRESH_TOKEN_EXPIRE_DAYS = 7;
+    @Value("${jwt.refresh-token-expire-days}")
+    private long REFRESH_TOKEN_EXPIRE_DAYS;
 
     private final StringRedisTemplate redisTemplate;
 
