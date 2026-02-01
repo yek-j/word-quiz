@@ -5,13 +5,13 @@ import com.jyk.wordquiz.wordquiz.common.exception.DuplicateUserException;
 import com.jyk.wordquiz.wordquiz.model.dto.request.*;
 import com.jyk.wordquiz.wordquiz.model.dto.response.LoginResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.UserInfoResponse;
+import com.jyk.wordquiz.wordquiz.model.entity.LoginLog;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
+import com.jyk.wordquiz.wordquiz.repository.LoginLogRepository;
 import com.jyk.wordquiz.wordquiz.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,12 +23,14 @@ public class AuthService {
 
     private final RefreshTokenService refreshTokenService;
     private final UserRepository userRepository;
+    private final LoginLogRepository loginLogRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider provider;
 
-    public AuthService(RefreshTokenService refreshTokenService, UserRepository userRepository, PasswordEncoder passwordEncoder, JwtTokenProvider provider) {
+    public AuthService(RefreshTokenService refreshTokenService, UserRepository userRepository, LoginLogRepository loginLogRepository, PasswordEncoder passwordEncoder, JwtTokenProvider provider) {
         this.refreshTokenService = refreshTokenService;
         this.userRepository = userRepository;
+        this.loginLogRepository = loginLogRepository;
         this.passwordEncoder = passwordEncoder;
         this.provider = provider;
     }
@@ -55,9 +57,12 @@ public class AuthService {
     /**
      * 로그인
      * @param loginReq: 로그인 정보
-     * @return LoginResponse: 사용자 정보와 토큰
+     * @param ip: IP
+     * @param userAgent: UserAgent
+     * @return: 로그인 Response
      */
-    public LoginResponse login(LoginRequest loginReq){
+    @Transactional
+    public LoginResponse login(LoginRequest loginReq, String ip, String userAgent){
         Optional<User> findUser = userRepository.findByEmail(loginReq.getEmail());
 
         if(findUser.isEmpty()) {
@@ -71,6 +76,15 @@ public class AuthService {
 
         String refreshToken = provider.createRefreshToken(user.getId());
         refreshTokenService.refreshTokenSave(user.getId(), refreshToken);
+
+        // 로그인 로그 추가
+        LoginLog loginLog = LoginLog.builder()
+                .userId(user.getId())
+                .userAgent(userAgent)
+                .userClientIp(ip)
+                .build();
+
+        loginLogRepository.save(loginLog);
 
         return LoginResponse.builder()
                 .username(user.getUsername())
@@ -190,4 +204,5 @@ public class AuthService {
     public void deleteRefreshToken(Long userId) {
         refreshTokenService.deleteRefreshToken(userId);
     }
+
 }

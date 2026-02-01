@@ -39,8 +39,14 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> signIn(@RequestBody LoginRequest loginRequest, HttpServletResponse response) {
-        LoginResponse loginResponse = authService.login(loginRequest);
+    public ResponseEntity<?> signIn(@RequestBody LoginRequest loginRequest,
+                                    HttpServletRequest request,
+                                    HttpServletResponse response) {
+
+        String ip = request.getRemoteAddr();
+        String userAgent = request.getHeader("User-Agent");
+
+        LoginResponse loginResponse = authService.login(loginRequest, ip, userAgent);
 
         // refresh token
         ResponseCookie cookie = ResponseCookie.from("refreshToken", loginResponse.getRefreshToken())
@@ -53,6 +59,7 @@ public class AuthController {
 
         response.addHeader("Set-Cookie", cookie.toString());
         loginResponse.setRefreshToken("");
+
 
         Map<String, Object> body = new HashMap<>();
         body.put("status", "success");
