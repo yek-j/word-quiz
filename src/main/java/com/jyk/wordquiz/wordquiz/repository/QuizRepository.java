@@ -1,6 +1,5 @@
 package com.jyk.wordquiz.wordquiz.repository;
 
-import com.jyk.wordquiz.wordquiz.common.type.SharingStatus;
 import com.jyk.wordquiz.wordquiz.model.entity.Quiz;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
 import org.springframework.data.domain.Page;
