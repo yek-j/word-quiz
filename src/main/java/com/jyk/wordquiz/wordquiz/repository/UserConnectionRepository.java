@@ -14,5 +14,6 @@ public interface UserConnectionRepository extends JpaRepository<UserConnection, 
     Optional<UserConnection> findByUserAndTargetUser(User user, User targetUser);
     Page<UserConnection> findByTargetUserAndConnectionStatus(User targetUser, UserConnectionStatus connectionStatus, Pageable pageable);
     Page<UserConnection> findByUserAndConnectionTypeAndConnectionStatus(User user, UserConnectionType connectionType, UserConnectionStatus connectionStatus, Pageable pageable);
+    Optional<UserConnection> findByUserAndTargetUserAndConnectionTypeAndConnectionStatus(User user, User targetUser, UserConnectionType userConnectionType, UserConnectionStatus userConnectionStatus);
 
 }

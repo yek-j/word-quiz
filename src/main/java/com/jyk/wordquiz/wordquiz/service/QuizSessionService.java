@@ -4,12 +4,15 @@ import com.jyk.wordquiz.wordquiz.common.exception.QuizNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.exception.QuizSessionNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.type.QuizType;
 import com.jyk.wordquiz.wordquiz.common.type.SharingStatus;
+import com.jyk.wordquiz.wordquiz.common.type.UserConnectionStatus;
+import com.jyk.wordquiz.wordquiz.common.type.UserConnectionType;
 import com.jyk.wordquiz.wordquiz.model.dto.request.QuizAnswerRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.request.QuizStartRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.*;
 import com.jyk.wordquiz.wordquiz.model.entity.*;
 import com.jyk.wordquiz.wordquiz.repository.QuizRepository;
 import com.jyk.wordquiz.wordquiz.repository.QuizSessionRepository;
+import com.jyk.wordquiz.wordquiz.repository.UserConnectionRepository;
 import com.jyk.wordquiz.wordquiz.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,14 +23,19 @@ import java.util.*;
 
 @Service
 public class QuizSessionService {
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private QuizRepository quizRepository;
-    @Autowired
-    private QuizSessionRepository quizSessionRepository;
-    @Autowired
-    private AIQuestionService aiQuestionService;
+    private final QuizRepository quizRepository;
+    private final QuizSessionRepository quizSessionRepository;
+    private final UserConnectionRepository userConnectionRepository;
+    private final AIQuestionService aiQuestionService;
+
+
+    public QuizSessionService(QuizRepository quizRepository, QuizSessionRepository quizSessionRepository, UserConnectionRepository userConnectionRepository, AIQuestionService aiQuestionService) {
+        this.quizRepository = quizRepository;
+        this.quizSessionRepository = quizSessionRepository;
+        this.userConnectionRepository = userConnectionRepository;
+        this.aiQuestionService = aiQuestionService;
+    }
+
 
     private static final String KEY_ANSWER = "Answer";
     private static final String KEY_CORRECT = "Correct";
@@ -82,9 +90,15 @@ public class QuizSessionService {
         }
 
         // 본인이 만들었거나 PUBLIC 퀴즈인지 확인
-        if(!quiz.getCreatedBy().getId().equals(user.getId())
-                && quiz.getSharingStatus() != SharingStatus.PUBLIC) {
-            throw new QuizNotFoundException(quiz.getId());
+        if(!quiz.getCreatedBy().getId().equals(user.getId()) && quiz.getSharingStatus() != SharingStatus.PUBLIC) {
+            // 본인이 아닌 PRIVATE 퀴즈는 접근 불가
+            if(quiz.getSharingStatus() == SharingStatus.PRIVATE) {
+                throw new QuizNotFoundException(quiz.getId());
+            }
+            // 친구의 아닌 경우 제외
+            Optional<UserConnection> userConnection = Optional.ofNullable(userConnectionRepository.findByUserAndTargetUserAndConnectionTypeAndConnectionStatus(
+                    user, quiz.getCreatedBy(), UserConnectionType.FRIEND, UserConnectionStatus.ACCEPTED
+            ).orElseThrow(() -> new QuizNotFoundException(quiz.getId())));
         }
 
         // 퀴즈에서 사용하는 Word 가져오기
