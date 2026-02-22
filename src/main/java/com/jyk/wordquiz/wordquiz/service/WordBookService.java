@@ -61,8 +61,8 @@ public class WordBookService {
         return new WordBooks(id,
                 wordBook.getName(),
                 wordBook.getDescription(),
-                wordBook.getCreatedBy().getUsername(),
-                wordBook.getCreatedBy().getId(),
+                user.getUsername(),
+                user.getId(),
                 wordBook.getCreatedAt());
     }
 
