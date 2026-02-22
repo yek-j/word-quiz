@@ -2,6 +2,7 @@ package com.jyk.wordquiz.wordquiz.controller;
 
 import com.jyk.wordquiz.wordquiz.common.auth.AuthUtil;
 import com.jyk.wordquiz.wordquiz.model.dto.request.WordBookRequest;
+import com.jyk.wordquiz.wordquiz.model.dto.response.WordBooks;
 import com.jyk.wordquiz.wordquiz.model.dto.response.WordBooksResponse;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.service.WordBookService;
@@ -57,6 +58,27 @@ public class WordBookController {
         response.put("status", "success");
         response.put("message", "단어장 리스트를 불러왔습니다.");
         response.put("result", result);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @Operation(summary = "단어장 상세 조회", description = "단어장을 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "단어장 조회 성공"
+            )
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getWordBook(Authentication authentication,
+                                         @Parameter(description = "단어장 ID") @PathVariable Long id) {
+        User user = AuthUtil.getCurrentUser(authentication);
+        WordBooks wordBook = wordBookService.getWordBook(user, id);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "단어장을 불러왔습니다.");
+        response.put("result", wordBook);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
