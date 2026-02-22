@@ -56,6 +56,16 @@ public class WordBookService {
         return new WordBooksResponse(wordBooks, totalPages);
     }
 
+    public WordBooks getWordBook(User user, Long id) {
+        WordBook wordBook = wordBookRepository.findByIdAndCreatedBy(id, user).orElseThrow(() -> new WordBookNotFoundException(id));
+        return new WordBooks(id,
+                wordBook.getName(),
+                wordBook.getDescription(),
+                user.getUsername(),
+                user.getId(),
+                wordBook.getCreatedAt());
+    }
+
     /**
      * 단어장 저장
      * @param wordBookReq: 단어장 정보
