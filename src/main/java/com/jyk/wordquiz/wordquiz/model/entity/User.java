@@ -1,8 +1,10 @@
 package com.jyk.wordquiz.wordquiz.model.entity;
 
+import com.jyk.wordquiz.wordquiz.common.type.UserRole;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -16,6 +18,11 @@ import java.util.List;
 public class User {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "varchar(20)")
+    @ColumnDefault("'USER'")
+    private UserRole role = UserRole.USER;
 
     @Column(unique = true, nullable = false, length = 50)
     private String username;
