@@ -12,14 +12,15 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class AdminService {
     private final UserRepository userRepository;
     private final LoginLogRepository loginLogRepository;
+
+    private static final Set<String> ALLOWED_SORT_FIELDS = new HashSet<>(List.of("id", "username", "createdAt"));
 
     public AdminService(UserRepository userRepository, LoginLogRepository loginLogRepository) {
         this.userRepository = userRepository;
@@ -31,6 +32,10 @@ public class AdminService {
 
         if(sort.equals("DESC")) {
             direction = Sort.Direction.DESC;
+        }
+
+        if(!ALLOWED_SORT_FIELDS.contains(criteria)) {
+            throw new IllegalArgumentException("정렬 기준 오류");
         }
 
         Pageable pageReq = PageRequest.of(page, 10, Sort.by(direction, criteria));

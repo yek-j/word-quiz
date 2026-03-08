@@ -39,7 +39,7 @@ public class AdminController {
                                             @RequestParam(defaultValue = "") String username,
                                             @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
                                             @RequestParam(required = false, defaultValue = "0", value = "page") int page,
-                                            @Parameter(description = "정렬 기준 (id, username, cratedAt, lastloginAt)", example = "id")
+                                            @Parameter(description = "정렬 기준 (id, username, createdAt)", example = "id")
                                             @RequestParam(required = false, defaultValue = "id", value = "orderby") String criteria,
                                             @Parameter(description = "정렬 방향 (ASC, DESC)", example = "DESC")
                                             @RequestParam(required= false, defaultValue = "ASC", value = "sort") String sort) {
