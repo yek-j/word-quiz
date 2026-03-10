@@ -1,10 +1,14 @@
 package com.jyk.wordquiz.wordquiz.service;
 
+import com.jyk.wordquiz.wordquiz.model.dto.request.PromptRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.AdminUserListResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.AdminUsers;
+import com.jyk.wordquiz.wordquiz.model.entity.Prompt;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.repository.LoginLogRepository;
+import com.jyk.wordquiz.wordquiz.repository.PromptRepository;
 import com.jyk.wordquiz.wordquiz.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,12 +23,14 @@ import java.util.stream.Collectors;
 public class AdminService {
     private final UserRepository userRepository;
     private final LoginLogRepository loginLogRepository;
+    private final PromptRepository promptRepository;
 
     private static final Set<String> ALLOWED_SORT_FIELDS = new HashSet<>(List.of("id", "username", "createdAt"));
 
-    public AdminService(UserRepository userRepository, LoginLogRepository loginLogRepository) {
+    public AdminService(UserRepository userRepository, LoginLogRepository loginLogRepository, PromptRepository promptRepository) {
         this.userRepository = userRepository;
         this.loginLogRepository = loginLogRepository;
+        this.promptRepository = promptRepository;
     }
 
     public AdminUserListResponse getAllUsers(int page, String criteria, String sort, String username) {
@@ -57,5 +63,14 @@ public class AdminService {
         List<AdminUsers> adminUsers = pageUsers.getContent();
 
         return new AdminUserListResponse(adminUsers, totalPage);
+    }
+
+    @Transactional
+    public void addPrompt(PromptRequest promptRequest) {
+        promptRepository.save(Prompt.builder()
+                .promptType(promptRequest.getPromptType())
+                .promptName(promptRequest.getPromptName())
+                .content(promptRequest.getContent())
+                .build());
     }
 }

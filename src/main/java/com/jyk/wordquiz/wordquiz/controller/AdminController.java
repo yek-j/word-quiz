@@ -1,5 +1,6 @@
 package com.jyk.wordquiz.wordquiz.controller;
 
+import com.jyk.wordquiz.wordquiz.model.dto.request.PromptRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.AdminUserListResponse;
 import com.jyk.wordquiz.wordquiz.service.AdminService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -8,10 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,8 +32,7 @@ public class AdminController {
             )
     })
     @GetMapping("/users")
-    public ResponseEntity<?> getAllUserList(Authentication authentication,
-                                            @Parameter(description = "검색할 사용자 이름")
+    public ResponseEntity<?> getAllUserList(@Parameter(description = "검색할 사용자 이름")
                                             @RequestParam(defaultValue = "") String username,
                                             @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
                                             @RequestParam(required = false, defaultValue = "0", value = "page") int page,
@@ -57,6 +54,42 @@ public class AdminController {
     // TODO: 사용자 관리(권한 등록, 차단 등)
 
     // TODO: 프롬프트 관리
+    @Operation(summary = "프롬프트 추가", description = "프롬프트 추가하는 기능입니다.")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "프롬프트 추가 성공"
+            )
+    })
+    @PostMapping("/prompt")
+    public ResponseEntity<?> addPrompt(Authentication authentication,
+                                       @Parameter(description = "추가할 프롬프트 데이터")
+                                       @RequestBody PromptRequest promptRequest) {
+
+        adminService.addPrompt(promptRequest);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "프롬프트 추가 성공입니다.");
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/prompt")
+    public ResponseEntity<?> getPrompt() {
+        return null;
+    }
+
+    @DeleteMapping("/prompt")
+    public ResponseEntity<?> deletePrompt() {
+        return null;
+    }
+
+    @PutMapping("/prompt")
+    public ResponseEntity<?> updatePrompt() {
+        return null;
+    }
+
 
     // TODO: 퀴즈, 단어장 설정 기능
 }
