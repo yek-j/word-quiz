@@ -1,8 +1,11 @@
 package com.jyk.wordquiz.wordquiz.controller;
 
+import com.jyk.wordquiz.wordquiz.common.auth.AuthUtil;
 import com.jyk.wordquiz.wordquiz.model.dto.request.PromptRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.AdminUserListResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.ListResultResponse;
+import com.jyk.wordquiz.wordquiz.model.dto.response.PromptResponse;
+import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.service.AdminService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -54,7 +57,6 @@ public class AdminController {
 
     // TODO: 사용자 관리(권한 등록, 차단 등)
 
-    // TODO: 프롬프트 관리
     @Operation(summary = "프롬프트 추가", description = "프롬프트 추가하는 기능입니다.")
     @ApiResponses(value = {
             @ApiResponse(
@@ -66,8 +68,8 @@ public class AdminController {
     public ResponseEntity<?> addPrompt(Authentication authentication,
                                        @Parameter(description = "추가할 프롬프트 데이터")
                                        @RequestBody PromptRequest promptRequest) {
-
-        adminService.addPrompt(promptRequest);
+        User user = AuthUtil.getCurrentUser(authentication);
+        adminService.addPrompt(user, promptRequest);
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");
@@ -104,12 +106,32 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/prompt")
-    public ResponseEntity<?> deletePrompt() {
-        return null;
+    @GetMapping("/prompt/{promptId}")
+    public ResponseEntity<?> getPrompt(@PathVariable Long promptId) {
+        PromptResponse result = adminService.getPrompt(promptId);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "프롬프트 결과입니다.");
+        response.put("result", result);
+
+        return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/prompt")
+    @DeleteMapping("/prompt/{promptId}")
+    public ResponseEntity<?> deletePrompt(Authentication authentication,
+                                          @PathVariable Long promptId) {
+        User user = AuthUtil.getCurrentUser(authentication);
+        adminService.deletePrompt(user, promptId);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "프롬프트 삭제 성공입니다.");
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/prompt/{promptId}")
     public ResponseEntity<?> updatePrompt() {
         return null;
     }

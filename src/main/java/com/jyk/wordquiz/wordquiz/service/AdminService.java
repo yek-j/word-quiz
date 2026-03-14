@@ -68,11 +68,13 @@ public class AdminService {
     }
 
     @Transactional
-    public void addPrompt(PromptRequest promptRequest) {
+    public void addPrompt(User user, PromptRequest promptRequest) {
         promptRepository.save(Prompt.builder()
                 .promptType(promptRequest.getPromptType())
                 .promptName(promptRequest.getPromptName())
                 .content(promptRequest.getContent())
+                .createdBy(user.getId())
+                .lastModifiedBy(user.getId())
                 .build());
     }
 
@@ -100,13 +102,7 @@ public class AdminService {
         Pageable pageReq = PageRequest.of(page, 10, Sort.by(direction, criteria));
         Page<Prompt> findPrompts = promptRepository.findByPromptNameAndType(promptName, promptTypeEnum, pageReq);
 
-        List<Long> userIds = findPrompts.getContent().stream()
-                .flatMap(p -> Stream.of(p.getCreatedBy(), p.getLastModifiedBy()))
-                .distinct()
-                .toList();
-
-        Map<Long, String> usernameMap = userRepository.findAllById(userIds).stream()
-                .collect(Collectors.toMap(User::getId, User::getUsername));
+        Map<Long, String> usernameMap = getUsernameMap(findPrompts.getContent());
 
         List<PromptResponse> promptResponses = findPrompts.getContent().stream()
                 .map(p -> PromptResponse.builder()
@@ -123,5 +119,41 @@ public class AdminService {
                 .toList();
 
         return new ListResultResponse(promptResponses, findPrompts.getTotalPages());
+    }
+
+    public PromptResponse getPrompt(Long promptId) {
+        Prompt prompt = promptRepository.findById(promptId).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 프롬프트입니다. id: " + promptId));
+        Map<Long, String> usernameMap = getUsernameMap(List.of(prompt));
+
+        return PromptResponse.builder()
+                .promptId(prompt.getId())
+                .promptName(prompt.getPromptName())
+                .content(prompt.getContent())
+                .promptType(prompt.getPromptType())
+                .disabled(prompt.isDisabled())
+                .createdAt(prompt.getCreatedAt())
+                .updatedAt(prompt.getUpdatedAt())
+                .createdUserName(usernameMap.getOrDefault(prompt.getCreatedBy(), "unknown"))
+                .lastModifiedUserName(usernameMap.getOrDefault(prompt.getLastModifiedBy(), "unknown"))
+                .build();
+    }
+
+    private Map<Long, String> getUsernameMap(List<Prompt> prompts) {
+        List<Long> userIds = prompts.stream()
+                .flatMap(p -> Stream.of(p.getCreatedBy(), p.getLastModifiedBy()))
+                .distinct()
+                .toList();
+        return userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(User::getId, User::getUsername));
+    }
+
+    @Transactional
+    public void deletePrompt(User user, Long promptId) {
+        Prompt prompt = promptRepository.findById(promptId).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 프롬프트입니다. id: " + promptId));
+
+        prompt.setDisabled(true);
+        prompt.setLastModifiedBy(user.getId());
+
+        promptRepository.save(prompt);
     }
 }
