@@ -1,10 +1,17 @@
 package com.jyk.wordquiz.wordquiz.service;
 
+import com.jyk.wordquiz.wordquiz.common.type.PromptType;
+import com.jyk.wordquiz.wordquiz.model.dto.request.PromptRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.AdminUserListResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.AdminUsers;
+import com.jyk.wordquiz.wordquiz.model.dto.response.ListResultResponse;
+import com.jyk.wordquiz.wordquiz.model.dto.response.PromptResponse;
+import com.jyk.wordquiz.wordquiz.model.entity.Prompt;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.repository.LoginLogRepository;
+import com.jyk.wordquiz.wordquiz.repository.PromptRepository;
 import com.jyk.wordquiz.wordquiz.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -14,17 +21,18 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class AdminService {
     private final UserRepository userRepository;
     private final LoginLogRepository loginLogRepository;
+    private final PromptRepository promptRepository;
 
-    private static final Set<String> ALLOWED_SORT_FIELDS = new HashSet<>(List.of("id", "username", "createdAt"));
-
-    public AdminService(UserRepository userRepository, LoginLogRepository loginLogRepository) {
+    public AdminService(UserRepository userRepository, LoginLogRepository loginLogRepository, PromptRepository promptRepository) {
         this.userRepository = userRepository;
         this.loginLogRepository = loginLogRepository;
+        this.promptRepository = promptRepository;
     }
 
     public AdminUserListResponse getAllUsers(int page, String criteria, String sort, String username) {
@@ -34,7 +42,7 @@ public class AdminService {
             direction = Sort.Direction.DESC;
         }
 
-        if(!ALLOWED_SORT_FIELDS.contains(criteria)) {
+        if(!List.of("id", "username", "createdAt").contains(criteria)) {
             throw new IllegalArgumentException("정렬 기준 오류");
         }
 
@@ -57,5 +65,107 @@ public class AdminService {
         List<AdminUsers> adminUsers = pageUsers.getContent();
 
         return new AdminUserListResponse(adminUsers, totalPage);
+    }
+
+    @Transactional
+    public void addPrompt(User user, PromptRequest promptRequest) {
+        promptRepository.save(Prompt.builder()
+                .promptType(promptRequest.getPromptType())
+                .promptName(promptRequest.getPromptName())
+                .content(promptRequest.getContent())
+                .createdBy(user.getId())
+                .lastModifiedBy(user.getId())
+                .build());
+    }
+
+    public ListResultResponse getPromptList(int page, String criteria, String sort, String promptName, String promptType) {
+        Sort.Direction direction = Sort.Direction.ASC;
+
+        if(sort.equals("DESC")) {
+            direction = Sort.Direction.DESC;
+        }
+
+        if(!List.of("id", "promptName", "promptType", "createdAt", "updatedAt", "createdBy", "lastModifiedBy").contains(criteria)) {
+            throw new IllegalArgumentException("정렬 기준 오류");
+        }
+
+        PromptType promptTypeEnum = null;
+
+        if (!promptType.isEmpty()) {
+            try {
+                promptTypeEnum = PromptType.valueOf(promptType);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("프롬프트 타입 오류: " + promptType);
+            }
+        }
+
+        Pageable pageReq = PageRequest.of(page, 10, Sort.by(direction, criteria));
+        Page<Prompt> findPrompts = promptRepository.findByPromptNameAndType(promptName, promptTypeEnum, pageReq);
+
+        Map<Long, String> usernameMap = getUsernameMap(findPrompts.getContent());
+
+        List<PromptResponse> promptResponses = findPrompts.getContent().stream()
+                .map(p -> PromptResponse.builder()
+                        .promptId(p.getId())
+                        .promptName(p.getPromptName())
+                        .content(p.getContent())
+                        .promptType(p.getPromptType())
+                        .disabled(p.isDisabled())
+                        .createdAt(p.getCreatedAt())
+                        .updatedAt(p.getUpdatedAt())
+                        .createdUserName(usernameMap.getOrDefault(p.getCreatedBy(), "unknown"))
+                        .lastModifiedUserName(usernameMap.getOrDefault(p.getLastModifiedBy(), "unknown"))
+                        .build())
+                .toList();
+
+        return new ListResultResponse(promptResponses, findPrompts.getTotalPages());
+    }
+
+    public PromptResponse getPrompt(Long promptId) {
+        Prompt prompt = promptRepository.findById(promptId).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 프롬프트입니다. id: " + promptId));
+        Map<Long, String> usernameMap = getUsernameMap(List.of(prompt));
+
+        return PromptResponse.builder()
+                .promptId(prompt.getId())
+                .promptName(prompt.getPromptName())
+                .content(prompt.getContent())
+                .promptType(prompt.getPromptType())
+                .disabled(prompt.isDisabled())
+                .createdAt(prompt.getCreatedAt())
+                .updatedAt(prompt.getUpdatedAt())
+                .createdUserName(usernameMap.getOrDefault(prompt.getCreatedBy(), "unknown"))
+                .lastModifiedUserName(usernameMap.getOrDefault(prompt.getLastModifiedBy(), "unknown"))
+                .build();
+    }
+
+    private Map<Long, String> getUsernameMap(List<Prompt> prompts) {
+        List<Long> userIds = prompts.stream()
+                .flatMap(p -> Stream.of(p.getCreatedBy(), p.getLastModifiedBy()))
+                .distinct()
+                .toList();
+        return userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(User::getId, User::getUsername));
+    }
+
+    @Transactional
+    public void deletePrompt(User user, Long promptId) {
+        Prompt prompt = promptRepository.findById(promptId).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 프롬프트입니다. id: " + promptId));
+
+        prompt.setDisabled(true);
+        prompt.setLastModifiedBy(user.getId());
+
+        promptRepository.save(prompt);
+    }
+
+    @Transactional
+    public void updatePrompt(User user, Long promptId, PromptRequest promptRequest) {
+        Prompt prompt = promptRepository.findById(promptId).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 프롬프트입니다. id: " + promptId));
+
+        prompt.setPromptName(promptRequest.getPromptName());
+        prompt.setPromptType(promptRequest.getPromptType());
+        prompt.setContent(promptRequest.getContent());
+        prompt.setLastModifiedBy(user.getId());
+
+        promptRepository.save(prompt);
     }
 }
