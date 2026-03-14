@@ -156,4 +156,16 @@ public class AdminService {
 
         promptRepository.save(prompt);
     }
+
+    @Transactional
+    public void updatePrompt(User user, Long promptId, PromptRequest promptRequest) {
+        Prompt prompt = promptRepository.findById(promptId).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 프롬프트입니다. id: " + promptId));
+
+        prompt.setPromptName(promptRequest.getPromptName());
+        prompt.setPromptType(promptRequest.getPromptType());
+        prompt.setContent(promptRequest.getContent());
+        prompt.setLastModifiedBy(user.getId());
+
+        promptRepository.save(prompt);
+    }
 }

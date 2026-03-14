@@ -106,8 +106,13 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "프롬프트 단건 조회", description = "특정 프롬프트를 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "프롬프트 조회 성공"),
+            @ApiResponse(responseCode = "400", description = "존재하지 않는 프롬프트")
+    })
     @GetMapping("/prompt/{promptId}")
-    public ResponseEntity<?> getPrompt(@PathVariable Long promptId) {
+    public ResponseEntity<?> getPrompt(@Parameter(description = "조회할 프롬프트 ID") @PathVariable Long promptId) {
         PromptResponse result = adminService.getPrompt(promptId);
 
         Map<String, Object> response = new HashMap<>();
@@ -118,9 +123,14 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "프롬프트 비활성화", description = "특정 프롬프트를 비활성화(disabled=true)합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "프롬프트 비활성화 성공"),
+            @ApiResponse(responseCode = "400", description = "존재하지 않는 프롬프트")
+    })
     @DeleteMapping("/prompt/{promptId}")
     public ResponseEntity<?> deletePrompt(Authentication authentication,
-                                          @PathVariable Long promptId) {
+                                          @Parameter(description = "비활성화할 프롬프트 ID") @PathVariable Long promptId) {
         User user = AuthUtil.getCurrentUser(authentication);
         adminService.deletePrompt(user, promptId);
 
@@ -131,9 +141,23 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "프롬프트 수정", description = "특정 프롬프트의 내용을 수정합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "프롬프트 수정 성공"),
+            @ApiResponse(responseCode = "400", description = "존재하지 않는 프롬프트")
+    })
     @PutMapping("/prompt/{promptId}")
-    public ResponseEntity<?> updatePrompt() {
-        return null;
+    public ResponseEntity<?> updatePrompt(Authentication authentication,
+                                          @Parameter(description = "수정할 프롬프트 ID") @PathVariable Long promptId,
+                                          @Parameter(description = "수정할 프롬프트 데이터") @RequestBody PromptRequest promptRequest) {
+        User user = AuthUtil.getCurrentUser(authentication);
+        adminService.updatePrompt(user, promptId, promptRequest);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "프롬프트 수정 성공입니다.");
+
+        return ResponseEntity.ok(response);
     }
 
 
