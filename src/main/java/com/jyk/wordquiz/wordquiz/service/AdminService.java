@@ -1,8 +1,11 @@
 package com.jyk.wordquiz.wordquiz.service;
 
+import com.jyk.wordquiz.wordquiz.common.type.PromptType;
 import com.jyk.wordquiz.wordquiz.model.dto.request.PromptRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.AdminUserListResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.AdminUsers;
+import com.jyk.wordquiz.wordquiz.model.dto.response.ListResultResponse;
+import com.jyk.wordquiz.wordquiz.model.dto.response.PromptResponse;
 import com.jyk.wordquiz.wordquiz.model.entity.Prompt;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.repository.LoginLogRepository;
@@ -18,14 +21,13 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class AdminService {
     private final UserRepository userRepository;
     private final LoginLogRepository loginLogRepository;
     private final PromptRepository promptRepository;
-
-    private static final Set<String> ALLOWED_SORT_FIELDS = new HashSet<>(List.of("id", "username", "createdAt"));
 
     public AdminService(UserRepository userRepository, LoginLogRepository loginLogRepository, PromptRepository promptRepository) {
         this.userRepository = userRepository;
@@ -40,7 +42,7 @@ public class AdminService {
             direction = Sort.Direction.DESC;
         }
 
-        if(!ALLOWED_SORT_FIELDS.contains(criteria)) {
+        if(!List.of("id", "username", "createdAt").contains(criteria)) {
             throw new IllegalArgumentException("정렬 기준 오류");
         }
 
@@ -72,5 +74,54 @@ public class AdminService {
                 .promptName(promptRequest.getPromptName())
                 .content(promptRequest.getContent())
                 .build());
+    }
+
+    public ListResultResponse getPromptList(int page, String criteria, String sort, String promptName, String promptType) {
+        Sort.Direction direction = Sort.Direction.ASC;
+
+        if(sort.equals("DESC")) {
+            direction = Sort.Direction.DESC;
+        }
+
+        if(!List.of("id", "promptName", "promptType", "createdAt", "updatedAt", "createdBy", "lastModifiedBy").contains(criteria)) {
+            throw new IllegalArgumentException("정렬 기준 오류");
+        }
+
+        PromptType promptTypeEnum = null;
+
+        if (!promptType.isEmpty()) {
+            try {
+                promptTypeEnum = PromptType.valueOf(promptType);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("프롬프트 타입 오류: " + promptType);
+            }
+        }
+
+        Pageable pageReq = PageRequest.of(page, 10, Sort.by(direction, criteria));
+        Page<Prompt> findPrompts = promptRepository.findByPromptNameAndType(promptName, promptTypeEnum, pageReq);
+
+        List<Long> userIds = findPrompts.getContent().stream()
+                .flatMap(p -> Stream.of(p.getCreatedBy(), p.getLastModifiedBy()))
+                .distinct()
+                .toList();
+
+        Map<Long, String> usernameMap = userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(User::getId, User::getUsername));
+
+        List<PromptResponse> promptResponses = findPrompts.getContent().stream()
+                .map(p -> PromptResponse.builder()
+                        .promptId(p.getId())
+                        .promptName(p.getPromptName())
+                        .content(p.getContent())
+                        .promptType(p.getPromptType())
+                        .disabled(p.isDisabled())
+                        .createdAt(p.getCreatedAt())
+                        .updatedAt(p.getUpdatedAt())
+                        .createdUserName(usernameMap.getOrDefault(p.getCreatedBy(), "unknown"))
+                        .lastModifiedUserName(usernameMap.getOrDefault(p.getLastModifiedBy(), "unknown"))
+                        .build())
+                .toList();
+
+        return new ListResultResponse(promptResponses, findPrompts.getTotalPages());
     }
 }

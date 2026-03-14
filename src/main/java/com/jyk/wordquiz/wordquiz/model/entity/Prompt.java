@@ -7,6 +7,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "prompt")
@@ -32,4 +36,18 @@ public class Prompt {
     @ColumnDefault("false")
     @Builder.Default
     private boolean disabled = false;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+
+    @Column(name = "created_by", nullable = false)
+    private Long createdBy ;
+
+    @Column(name = "last_modified_by", nullable = false)
+    private Long lastModifiedBy;
 }
