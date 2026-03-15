@@ -2,6 +2,7 @@ package com.jyk.wordquiz.wordquiz.controller;
 
 import com.jyk.wordquiz.wordquiz.common.auth.AuthUtil;
 import com.jyk.wordquiz.wordquiz.model.dto.request.PromptRequest;
+import com.jyk.wordquiz.wordquiz.model.dto.request.UserRoleRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.AdminUserListResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.ListResultResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.PromptResponse;
@@ -55,7 +56,18 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
-    // TODO: 사용자 관리(권한 등록, 차단 등)
+    @PatchMapping("/users/{userId}/role")
+    public ResponseEntity<?> setRole(@PathVariable Long userId,
+                                     @RequestBody UserRoleRequest userRoleRequest) {
+        
+        adminService.setUserRole(userId, userRoleRequest);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "사용자 권한 변경 성공입니다.");
+
+        return ResponseEntity.ok(response);
+    }
 
     @Operation(summary = "프롬프트 추가", description = "프롬프트 추가하는 기능입니다.")
     @ApiResponses(value = {

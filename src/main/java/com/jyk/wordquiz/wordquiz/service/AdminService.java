@@ -1,7 +1,9 @@
 package com.jyk.wordquiz.wordquiz.service;
 
+import com.jyk.wordquiz.wordquiz.common.exception.UserNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.type.PromptType;
 import com.jyk.wordquiz.wordquiz.model.dto.request.PromptRequest;
+import com.jyk.wordquiz.wordquiz.model.dto.request.UserRoleRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.AdminUserListResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.AdminUsers;
 import com.jyk.wordquiz.wordquiz.model.dto.response.ListResultResponse;
@@ -153,8 +155,6 @@ public class AdminService {
 
         prompt.setDisabled(true);
         prompt.setLastModifiedBy(user.getId());
-
-        promptRepository.save(prompt);
     }
 
     @Transactional
@@ -165,7 +165,11 @@ public class AdminService {
         prompt.setPromptType(promptRequest.getPromptType());
         prompt.setContent(promptRequest.getContent());
         prompt.setLastModifiedBy(user.getId());
+    }
 
-        promptRepository.save(prompt);
+    @Transactional
+    public void setUserRole(Long changeUserId, UserRoleRequest userRoleRequest) {
+        User changeUser = userRepository.findById(changeUserId).orElseThrow(() -> new UserNotFoundException(changeUserId));
+        changeUser.setRole(userRoleRequest.getUserRole());
     }
 }
