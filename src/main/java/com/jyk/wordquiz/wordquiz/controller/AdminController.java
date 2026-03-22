@@ -1,7 +1,9 @@
 package com.jyk.wordquiz.wordquiz.controller;
 
 import com.jyk.wordquiz.wordquiz.common.auth.AuthUtil;
+import com.jyk.wordquiz.wordquiz.model.dto.request.ConfigRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.request.PromptRequest;
+import com.jyk.wordquiz.wordquiz.model.dto.request.UserRoleRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.AdminUserListResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.ListResultResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.PromptResponse;
@@ -15,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,7 +58,18 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
-    // TODO: 사용자 관리(권한 등록, 차단 등)
+    @PatchMapping("/users/{userId}/role")
+    public ResponseEntity<?> setRole(@PathVariable Long userId,
+                                     @Valid @RequestBody UserRoleRequest userRoleRequest) {
+        
+        adminService.setUserRole(userId, userRoleRequest);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "사용자 권한 변경 성공입니다.");
+
+        return ResponseEntity.ok(response);
+    }
 
     @Operation(summary = "프롬프트 추가", description = "프롬프트 추가하는 기능입니다.")
     @ApiResponses(value = {
@@ -160,6 +174,18 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
-
-    // TODO: 퀴즈, 단어장 설정 기능
+    @Operation(summary = "설정 수정", description = "시스템 설정을 수정합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "설정 수정 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 (유효성 검사 실패)"),
+            @ApiResponse(responseCode = "500", description = "Config가 초기화되지 않은 경우")
+    })
+    @PutMapping("/config")
+    public ResponseEntity<?> updateConfig(@Parameter(description = "수정할 설정 데이터") @Valid @RequestBody ConfigRequest configRequest) {
+        adminService.updateConfig(configRequest);
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "설정 수정 성공입니다.");
+        return ResponseEntity.ok(response);
+    }
 }
