@@ -2,14 +2,17 @@ package com.jyk.wordquiz.wordquiz.service;
 
 import com.jyk.wordquiz.wordquiz.common.exception.UserNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.type.PromptType;
+import com.jyk.wordquiz.wordquiz.model.dto.request.ConfigRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.request.PromptRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.request.UserRoleRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.AdminUserListResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.AdminUsers;
 import com.jyk.wordquiz.wordquiz.model.dto.response.ListResultResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.PromptResponse;
+import com.jyk.wordquiz.wordquiz.model.entity.Config;
 import com.jyk.wordquiz.wordquiz.model.entity.Prompt;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
+import com.jyk.wordquiz.wordquiz.repository.ConfigRepository;
 import com.jyk.wordquiz.wordquiz.repository.LoginLogRepository;
 import com.jyk.wordquiz.wordquiz.repository.PromptRepository;
 import com.jyk.wordquiz.wordquiz.repository.UserRepository;
@@ -30,11 +33,13 @@ public class AdminService {
     private final UserRepository userRepository;
     private final LoginLogRepository loginLogRepository;
     private final PromptRepository promptRepository;
+    private final ConfigRepository configRepository;
 
-    public AdminService(UserRepository userRepository, LoginLogRepository loginLogRepository, PromptRepository promptRepository) {
+    public AdminService(UserRepository userRepository, LoginLogRepository loginLogRepository, PromptRepository promptRepository, ConfigRepository configRepository) {
         this.userRepository = userRepository;
         this.loginLogRepository = loginLogRepository;
         this.promptRepository = promptRepository;
+        this.configRepository = configRepository;
     }
 
     public AdminUserListResponse getAllUsers(int page, String criteria, String sort, String username) {
@@ -171,5 +176,11 @@ public class AdminService {
     public void setUserRole(Long changeUserId, UserRoleRequest userRoleRequest) {
         User changeUser = userRepository.findById(changeUserId).orElseThrow(() -> new UserNotFoundException(changeUserId));
         changeUser.setRole(userRoleRequest.getUserRole());
+    }
+
+    @Transactional
+    public void updateConfig(ConfigRequest configRequest) {
+        Config config = configRepository.findById(1L).orElseThrow();
+        config.update(configRequest);
     }
 }

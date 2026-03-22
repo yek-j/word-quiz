@@ -1,6 +1,7 @@
 package com.jyk.wordquiz.wordquiz.controller;
 
 import com.jyk.wordquiz.wordquiz.common.auth.AuthUtil;
+import com.jyk.wordquiz.wordquiz.model.dto.request.ConfigRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.request.PromptRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.request.UserRoleRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.AdminUserListResponse;
@@ -172,6 +173,17 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
-
-    // TODO: 퀴즈, 단어장 설정 기능
+    @Operation(summary = "설정 수정", description = "시스템 설정을 수정합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "설정 수정 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+    })
+    @PutMapping("/config")
+    public ResponseEntity<?> updateConfig(@Parameter(description = "수정할 설정 데이터") @RequestBody ConfigRequest configRequest) {
+        adminService.updateConfig(configRequest);
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "설정 수정 성공입니다.");
+        return ResponseEntity.ok(response);
+    }
 }
