@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -59,7 +60,7 @@ public class AdminController {
 
     @PatchMapping("/users/{userId}/role")
     public ResponseEntity<?> setRole(@PathVariable Long userId,
-                                     @RequestBody UserRoleRequest userRoleRequest) {
+                                     @Valid @RequestBody UserRoleRequest userRoleRequest) {
         
         adminService.setUserRole(userId, userRoleRequest);
 
@@ -176,10 +177,11 @@ public class AdminController {
     @Operation(summary = "설정 수정", description = "시스템 설정을 수정합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "설정 수정 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 (유효성 검사 실패)"),
+            @ApiResponse(responseCode = "500", description = "Config가 초기화되지 않은 경우")
     })
     @PutMapping("/config")
-    public ResponseEntity<?> updateConfig(@Parameter(description = "수정할 설정 데이터") @RequestBody ConfigRequest configRequest) {
+    public ResponseEntity<?> updateConfig(@Parameter(description = "수정할 설정 데이터") @Valid @RequestBody ConfigRequest configRequest) {
         adminService.updateConfig(configRequest);
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");

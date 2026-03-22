@@ -2,10 +2,10 @@ package com.jyk.wordquiz.wordquiz.model.entity;
 
 import com.jyk.wordquiz.wordquiz.model.dto.request.ConfigRequest;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import lombok.*;
 
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
 
 @Entity
 @Table(name = "config")
@@ -19,18 +19,22 @@ public class Config {
     private Long id;
 
     @Column(name = "max_quiz_count", nullable = false)
+    @Min(1)
     @Max(100)
     private int maxQuizCount;  // 사용자가 만들 수 있는 퀴즈 수
 
     @Column(name = "max_wordbook_count", nullable = false)
+    @Min(1)
     @Max(100)
     private int maxWordBookCount;  // 사용자가 만들 수 있는 단어장 수
 
     @Column(name = "max_wordbooks_per_quiz", nullable = false)
+    @Min(1)
     @Max(100)
     private int maxWordBooksPerQuiz;  // 퀴즈 안의 포함 가능한 단어장 수
 
     @Column(name = "max_words_per_book", nullable = false)
+    @Min(1)
     @Max(100)
     private int maxWordsPerBook;  // 단어장 안의 단어 수
 

@@ -180,7 +180,8 @@ public class AdminService {
 
     @Transactional
     public void updateConfig(ConfigRequest configRequest) {
-        Config config = configRepository.findById(1L).orElseThrow();
+        Config config = configRepository.findTopByOrderByIdAsc()
+                .orElseThrow(() -> new IllegalStateException("Config가 초기화되지 않았습니다."));
         config.update(configRequest);
     }
 }
