@@ -39,14 +39,14 @@ public class UploadExcel {
 
             DataFormatter formatter = new DataFormatter();
 
-            for (int i = 1; i < sheet.getPhysicalNumberOfRows(); i++) {
+            for (int i = 1; i < sheet.getLastRowNum(); i++) {
                 XSSFRow row = sheet.getRow(i);
                 if (row == null) {
                     continue;
                 }
 
-                String term = formatter.formatCellValue(row.getCell(0));
-                String description = formatter.formatCellValue(row.getCell(1));
+                String term = formatter.formatCellValue(row.getCell(0)).trim();
+                String description = formatter.formatCellValue(row.getCell(1)).trim();
 
                 // 빈 행 스킵
                 if (term.isEmpty() || description.isEmpty()) {
