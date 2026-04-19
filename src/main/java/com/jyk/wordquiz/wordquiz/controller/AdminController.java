@@ -5,6 +5,7 @@ import com.jyk.wordquiz.wordquiz.model.dto.request.ConfigRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.request.PromptRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.request.UserRoleRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.AdminUserListResponse;
+import com.jyk.wordquiz.wordquiz.model.dto.response.ApiResponseWrapper;
 import com.jyk.wordquiz.wordquiz.model.dto.response.ListResultResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.PromptResponse;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
@@ -18,8 +19,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/admin")
@@ -50,25 +49,16 @@ public class AdminController {
 
         AdminUserListResponse result = adminService.getAllUsers(page, criteria, sort, username);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "관리자용 사용자 리스트 결과입니다.");
-        response.put("result", result);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("관리자용 사용자 리스트 결과입니다.", result));
     }
 
     @PatchMapping("/users/{userId}/role")
     public ResponseEntity<?> setRole(@PathVariable Long userId,
                                      @Valid @RequestBody UserRoleRequest userRoleRequest) {
-        
+
         adminService.setUserRole(userId, userRoleRequest);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "사용자 권한 변경 성공입니다.");
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("사용자 권한 변경 성공입니다."));
     }
 
     @Operation(summary = "프롬프트 추가", description = "프롬프트 추가하는 기능입니다.")
@@ -85,11 +75,7 @@ public class AdminController {
         User user = AuthUtil.getCurrentUser(authentication);
         adminService.addPrompt(user, promptRequest);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "프롬프트 추가 성공입니다.");
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("프롬프트 추가 성공입니다."));
     }
 
     @Operation(summary = "관리자용 프롬프트 조회", description = "프롬프트 리스트입니다.")
@@ -112,12 +98,7 @@ public class AdminController {
                                            @RequestParam(required= false, defaultValue = "ASC", value = "sort") String sort) {
         ListResultResponse result = adminService.getPromptList(page, criteria, sort, promptName, promptType);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "프롬프트 리스트 결과입니다.");
-        response.put("result", result);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("프롬프트 리스트 결과입니다.", result));
     }
 
     @Operation(summary = "프롬프트 단건 조회", description = "특정 프롬프트를 조회합니다.")
@@ -129,12 +110,7 @@ public class AdminController {
     public ResponseEntity<?> getPrompt(@Parameter(description = "조회할 프롬프트 ID") @PathVariable Long promptId) {
         PromptResponse result = adminService.getPrompt(promptId);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "프롬프트 결과입니다.");
-        response.put("result", result);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("프롬프트 결과입니다.", result));
     }
 
     @Operation(summary = "프롬프트 비활성화", description = "특정 프롬프트를 비활성화(disabled=true)합니다.")
@@ -148,11 +124,7 @@ public class AdminController {
         User user = AuthUtil.getCurrentUser(authentication);
         adminService.deletePrompt(user, promptId);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "프롬프트 삭제 성공입니다.");
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("프롬프트 삭제 성공입니다."));
     }
 
     @Operation(summary = "프롬프트 수정", description = "특정 프롬프트의 내용을 수정합니다.")
@@ -167,11 +139,7 @@ public class AdminController {
         User user = AuthUtil.getCurrentUser(authentication);
         adminService.updatePrompt(user, promptId, promptRequest);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "프롬프트 수정 성공입니다.");
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("프롬프트 수정 성공입니다."));
     }
 
     @Operation(summary = "설정 수정", description = "시스템 설정을 수정합니다.")
@@ -183,9 +151,6 @@ public class AdminController {
     @PutMapping("/config")
     public ResponseEntity<?> updateConfig(@Parameter(description = "수정할 설정 데이터") @Valid @RequestBody ConfigRequest configRequest) {
         adminService.updateConfig(configRequest);
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "설정 수정 성공입니다.");
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("설정 수정 성공입니다."));
     }
 }

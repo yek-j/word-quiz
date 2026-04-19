@@ -2,6 +2,7 @@ package com.jyk.wordquiz.wordquiz.controller;
 
 import com.jyk.wordquiz.wordquiz.common.auth.AuthUtil;
 import com.jyk.wordquiz.wordquiz.model.dto.request.WordBookRequest;
+import com.jyk.wordquiz.wordquiz.model.dto.response.ApiResponseWrapper;
 import com.jyk.wordquiz.wordquiz.model.dto.response.WordBooks;
 import com.jyk.wordquiz.wordquiz.model.dto.response.WordBooksResponse;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
@@ -20,9 +21,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/wordbooks")
@@ -54,12 +52,7 @@ public class WordBookController {
 
         WordBooksResponse result = wordBookService.getWordBooks(user, page, criteria, sort.toUpperCase());
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "단어장 리스트를 불러왔습니다.");
-        response.put("result", result);
-
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("단어장 리스트를 불러왔습니다.", result));
     }
 
     @Operation(summary = "단어장 상세 조회", description = "단어장을 조회합니다.")
@@ -75,12 +68,7 @@ public class WordBookController {
         User user = AuthUtil.getCurrentUser(authentication);
         WordBooks wordBook = wordBookService.getWordBook(user, id);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "단어장을 불러왔습니다.");
-        response.put("result", wordBook);
-
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("단어장을 불러왔습니다.", wordBook));
     }
 
     @Operation(summary = "단어장 추가", description = "단어장을 새로 추가합니다.")
@@ -93,11 +81,7 @@ public class WordBookController {
         User user = AuthUtil.getCurrentUser(authentication);
         wordBookService.saveWordBook(wordBookReq, user);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "단어장을 저장했습니다.");
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponseWrapper.success("단어장을 저장했습니다."));
     }
 
     @Operation(summary = "단어장 수정", description = "기존의 단어장 정보를 수정합니다.")
@@ -116,11 +100,7 @@ public class WordBookController {
         User user = AuthUtil.getCurrentUser(authentication);
         wordBookService.updateWordBook(id, wordBookReq, user);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "단어장을 수정했습니다.");
-
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("단어장을 수정했습니다."));
     }
 
     @Operation(summary = "단어장 삭제", description = "단어장을 삭제합니다.")
@@ -133,10 +113,6 @@ public class WordBookController {
         User user = AuthUtil.getCurrentUser(authentication);
         wordBookService.deleteWordBook(id, user);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "단어장을 삭제했습니다.");
-
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("단어장을 삭제했습니다."));
     }
 }

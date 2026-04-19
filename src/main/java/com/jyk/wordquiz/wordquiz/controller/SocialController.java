@@ -2,6 +2,7 @@ package com.jyk.wordquiz.wordquiz.controller;
 
 import com.jyk.wordquiz.wordquiz.common.auth.AuthUtil;
 import com.jyk.wordquiz.wordquiz.model.dto.request.FriendRequest;
+import com.jyk.wordquiz.wordquiz.model.dto.response.ApiResponseWrapper;
 import com.jyk.wordquiz.wordquiz.model.dto.response.FriendRequestResult;
 import com.jyk.wordquiz.wordquiz.model.dto.response.FriendsResponse;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
@@ -20,8 +21,6 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/social")
@@ -57,18 +56,11 @@ public class SocialController {
 
         FriendRequestResult result = socialService.friendRequest(user, friendRequest);
 
-        Map<String, Object> response = new HashMap<>();
-
-
         if (result.getCode() == HttpStatus.CREATED) {
-            response.put("status", "success");
+            return ResponseEntity.status(result.getCode()).body(ApiResponseWrapper.success(result.getMessage()));
         } else {
-            response.put("status", "fail");
+            return ResponseEntity.status(result.getCode()).body(ApiResponseWrapper.fail(result.getMessage()));
         }
-
-        response.put("message", result.getMessage());
-
-        return ResponseEntity.status(result.getCode()).body(response);
     }
 
     @Operation(summary = "친구 요청 리스트", description = "요청 온 친구 리스트를 본다.")
@@ -86,12 +78,7 @@ public class SocialController {
 
         FriendsResponse result = socialService.getFriendRequestList(user, page);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "친구 요청 온 리스트 입니다.");
-        response.put("result", result);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("친구 요청 온 리스트 입니다.", result));
     }
 
     @Operation(summary = "친구 수락", description = "친구 요청이 왔을 때 수락한다.")
@@ -109,11 +96,7 @@ public class SocialController {
 
         socialService.friendRequestAccept(user, requestUserId);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "친구 수락을 완료했습니다.");
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("친구 수락을 완료했습니다."));
     }
 
     @Operation(summary = "친구 거절", description = "친구 요청이 왔을 때 거절한다.")
@@ -131,11 +114,7 @@ public class SocialController {
 
         socialService.friendRequestReject(user, requestUserId);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "친구 거절을 완료했습니다.");
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("친구 거절을 완료했습니다."));
     }
 
     @Operation(summary = "친구 리스트 보기", description = "친구 리스트를 확인한다.")
@@ -153,12 +132,7 @@ public class SocialController {
 
         FriendsResponse result = socialService.getFriendList(user, page);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "친구 리스트 입니다.");
-        response.put("result", result);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("친구 리스트 입니다.", result));
     }
 
     @Operation(summary = "친구 삭제", description = "친구를 삭제합니다.")
@@ -173,14 +147,10 @@ public class SocialController {
                                           @Parameter(description = "삭제할 친구 사용자 ID")
                                           @PathVariable Long deleteFriendId) {
         User user = AuthUtil.getCurrentUser(authentication);
-        
+
         socialService.deleteFriend(user, deleteFriendId);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "친구 삭제를 완료했습니다.");
-        
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("친구 삭제를 완료했습니다."));
     }
 
 }

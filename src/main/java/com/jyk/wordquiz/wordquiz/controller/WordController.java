@@ -6,6 +6,7 @@ import com.jyk.wordquiz.wordquiz.common.exception.ErrorResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.request.UpdateWordRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.request.WordCheckRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.request.WordRequest;
+import com.jyk.wordquiz.wordquiz.model.dto.response.ApiResponseWrapper;
 import com.jyk.wordquiz.wordquiz.model.dto.response.WordCheckResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.Words;
 import com.jyk.wordquiz.wordquiz.model.dto.response.WordsResponse;
@@ -19,7 +20,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -32,7 +32,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -80,12 +79,7 @@ public class WordController {
         User user = AuthUtil.getCurrentUser(authentication);
         WordsResponse result = wordService.getWords(wordBookId, user, page, criteria, sort.toUpperCase());
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "단어 리스트를 불러왔습니다.");
-        response.put("result", result);
-
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("단어 리스트를 불러왔습니다.", result));
     }
 
     @Operation(
@@ -110,11 +104,7 @@ public class WordController {
 
         wordService.saveWord(wordBookId, wordReq, user);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "단어를 저장했습니다.");
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponseWrapper.success("단어를 저장했습니다."));
     }
 
     @Operation(
@@ -145,11 +135,7 @@ public class WordController {
         User user = AuthUtil.getCurrentUser(authentication);
         wordService.updateWord(wordBookId, wordId, updateWordReq, user);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "단어를 수정했습니다.");
-
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("단어를 수정했습니다."));
     }
 
     @Operation(
@@ -178,11 +164,7 @@ public class WordController {
 
         wordService.deleteWord(wordBookId, wordId, user);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "단어를 삭제했습니다.");
-
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("단어를 삭제했습니다."));
     }
 
     @Operation(
@@ -206,12 +188,7 @@ public class WordController {
 
         WordCheckResponse result = wordService.wordCheck(wordCheckReq, wordBookId, user);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "단어 중복체크를 완료했습니다.");
-        response.put("result", result);
-
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("단어 중복체크를 완료했습니다.", result));
     }
 
     @Operation(
@@ -227,7 +204,7 @@ public class WordController {
     public ResponseEntity<?> UploadWordFile(Authentication authentication,
                                             @Parameter(description = "단어장 ID") @PathVariable Long wordBookId,
                                             @Parameter(
-                                                    description = "업로드할 Excel 파일 (.xlsx, .xls)",
+                                                    description = "업로드할 Excel 파일 (.xlsx)",
                                                     content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)
                                             ) @RequestParam("file") MultipartFile file) throws IOException {
         User user = AuthUtil.getCurrentUser(authentication);
@@ -235,12 +212,7 @@ public class WordController {
 
         List<Words> existingWord = wordService.saveExcelData(words, wordBookId, user);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "단어 저장을 완료했습니다.");
-        response.put("existingWord", existingWord);
-
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("단어 저장을 완료했습니다.", existingWord));
     }
 
     @Operation(

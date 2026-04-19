@@ -66,10 +66,10 @@ public class AnalysisService {
      * @param maxAccuracy: 최대 정답률
      * @return WeekWordsAnalysis(단어 정답 횟수, 총 단어 수)
      */
-    public WeekWordsAnalysis weekWordsAnalysis(User user, int limit, int maxAccuracy) {
+    public WeakWordsAnalysis weakWordsAnalysis(User user, int limit, int maxAccuracy) {
         List<QuizSession> sessions = quizSessionRepository.findByUserAndIsQuizActive(user, false);
 
-        List<WeekWordStats> weekWordsList = new ArrayList<>();
+        List<WeakWordStats> weakWordsList = new ArrayList<>();
         Map<Word, List<Boolean>> wordResultMap = new HashMap<>(); // 정오답 집계용
         Map<Word, LocalDateTime> lastAttemptedMap = new HashMap<>(); // 퀴즈 마지막 날짜 집계용
 
@@ -85,7 +85,7 @@ public class AnalysisService {
             }
         }
 
-        // WeekWordStats 객체로 변환
+        // WeakWordStats 객체로 변환
         for(Map.Entry<Word, List<Boolean>> entry : wordResultMap.entrySet()) {
             Word word = entry.getKey();
             List<Boolean> results = entry.getValue();
@@ -96,7 +96,7 @@ public class AnalysisService {
 
             //취약 단어만 (정답률 기준)
             if(accuracyRate <= maxAccuracy) {
-                weekWordsList.add(new WeekWordStats(
+                weakWordsList.add(new WeakWordStats(
                    word.getId(),
                    word.getTerm(),
                    word.getWordBook().getName(),
@@ -109,12 +109,12 @@ public class AnalysisService {
             }
         }
 
-        List<WeekWordStats> finalList = weekWordsList.stream()
-                .sorted(Comparator.comparing(WeekWordStats::getAccuracyRate)) // 정답률 낮은순
+        List<WeakWordStats> finalList = weakWordsList.stream()
+                .sorted(Comparator.comparing(WeakWordStats::getAccuracyRate)) // 정답률 낮은순
                 .limit(limit)
                 .toList();
 
-        return new WeekWordsAnalysis(finalList, wordResultMap.size());
+        return new WeakWordsAnalysis(finalList, wordResultMap.size());
     }
 
     /**

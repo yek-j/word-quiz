@@ -2,19 +2,16 @@ package com.jyk.wordquiz.wordquiz.controller;
 
 import com.jyk.wordquiz.wordquiz.common.auth.AuthUtil;
 import com.jyk.wordquiz.wordquiz.model.dto.request.QuizParamRequest;
+import com.jyk.wordquiz.wordquiz.model.dto.response.ApiResponseWrapper;
 import com.jyk.wordquiz.wordquiz.model.dto.response.QuizResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.QuizzesResponse;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.service.QuizService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/quizzes")
@@ -28,10 +25,7 @@ public class QuizController {
         User user = AuthUtil.getCurrentUser(authentication);
         quizService.createQuiz(user, quizParamRequest);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "퀴즈를 생성했습니다.");
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("퀴즈를 생성했습니다."));
     }
 
     @GetMapping
@@ -40,16 +34,11 @@ public class QuizController {
                                          @RequestParam(required= false, defaultValue = "DESC", value = "sort") String sort,
                                          @RequestParam(required = false, defaultValue = "ALL", value = "kind") String kind,
                                          @RequestParam(required = false, value = "searchId") Long searchId) {
-        
+
         User user = AuthUtil.getCurrentUser(authentication);
         QuizzesResponse result = quizService.getQuizList(user, page, criteria, sort.toUpperCase(), kind, searchId);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "퀴즈 리스트를 불러왔습니다.");
-        response.put("result", result);
-
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("퀴즈 리스트를 불러왔습니다.", result));
     }
 
     @GetMapping("/{quizId}")
@@ -57,12 +46,7 @@ public class QuizController {
         User user = AuthUtil.getCurrentUser(authentication);
         QuizResponse result = quizService.getQuiz(user, quizId);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "퀴즈 상세정보를 불러왔습니다.");
-        response.put("result", result);
-
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("퀴즈 상세정보를 불러왔습니다.", result));
     }
 
     @PutMapping("/{quizId}")
@@ -71,11 +55,7 @@ public class QuizController {
 
         quizService.updateQuiz(user, quizId, quizParamRequest);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "퀴즈 수정을 성공했습니다.");
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("퀴즈 수정을 성공했습니다."));
     }
 
     @DeleteMapping("/{quizId}")
@@ -84,10 +64,6 @@ public class QuizController {
 
         quizService.deleteQuiz(user, quizId);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "퀴즈 삭제를 성공했습니다.");
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("퀴즈 삭제를 성공했습니다."));
     }
 }

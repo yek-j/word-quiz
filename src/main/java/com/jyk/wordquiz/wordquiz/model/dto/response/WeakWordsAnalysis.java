@@ -7,7 +7,7 @@ import java.util.List;
 
 @Data
 @AllArgsConstructor
-public class WeekWordsAnalysis {
-    private List<WeekWordStats> weekWords;
+public class WeakWordsAnalysis {
+    private List<WeakWordStats> weakWords;
     private int totalAnalyzedWords;  // 총 단어 수
 }
