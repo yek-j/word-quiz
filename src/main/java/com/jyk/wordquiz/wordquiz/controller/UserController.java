@@ -1,6 +1,7 @@
 package com.jyk.wordquiz.wordquiz.controller;
 
 import com.jyk.wordquiz.wordquiz.common.auth.AuthUtil;
+import com.jyk.wordquiz.wordquiz.model.dto.response.ApiResponseWrapper;
 import com.jyk.wordquiz.wordquiz.model.dto.response.UsersResponse;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.service.UserService;
@@ -16,9 +17,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -45,12 +43,7 @@ public class UserController {
 
         UsersResponse result = userService.getUserList(user, username, page);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "사용자 이름 친구 검색 결과입니다.");
-        response.put("result", result);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("사용자 이름 친구 검색 결과입니다.", result));
     }
 
 }

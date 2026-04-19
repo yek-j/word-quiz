@@ -2,6 +2,7 @@ package com.jyk.wordquiz.wordquiz.controller;
 
 import com.jyk.wordquiz.wordquiz.common.auth.AuthUtil;
 import com.jyk.wordquiz.wordquiz.model.dto.request.*;
+import com.jyk.wordquiz.wordquiz.model.dto.response.ApiResponseWrapper;
 import com.jyk.wordquiz.wordquiz.model.dto.response.LoginResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.UserInfoResponse;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
@@ -15,7 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -31,11 +31,7 @@ public class AuthController {
     public ResponseEntity<?> siginUp(@RequestBody SignupRequest signupReq) {
         authService.siginup(signupReq);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "회원가입이 성공적으로 완료되었습니다.");
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponseWrapper.success("회원가입이 성공적으로 완료되었습니다."));
     }
 
     @PostMapping("/login")
@@ -60,11 +56,7 @@ public class AuthController {
         response.addHeader("Set-Cookie", cookie.toString());
         loginResponse.setRefreshToken("");
 
-
-        Map<String, Object> body = new HashMap<>();
-        body.put("status", "success");
-        body.put("message", loginResponse);
-        return ResponseEntity.ok(body);
+        return ResponseEntity.ok(ApiResponseWrapper.success("로그인 성공", loginResponse));
     }
 
     @PostMapping("/logout")
@@ -85,7 +77,7 @@ public class AuthController {
                 .build();
         response.addHeader("Set-Cookie", cookie.toString());
 
-        return ResponseEntity.ok("로그아웃 완료");
+        return ResponseEntity.ok(ApiResponseWrapper.success("로그아웃 완료"));
     }
 
     @GetMapping("/me")
@@ -93,7 +85,7 @@ public class AuthController {
         User user = AuthUtil.getCurrentUser(authentication);
         UserInfoResponse userInfo = authService.getUserInfo(user);
 
-        return ResponseEntity.ok(userInfo);
+        return ResponseEntity.ok(ApiResponseWrapper.success("사용자 정보를 가져왔습니다.", userInfo));
     }
 
     @PutMapping("/me")
@@ -102,11 +94,7 @@ public class AuthController {
 
         authService.updateUserInfo(user, userInfoRequest);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "사용자 정보가 성공적으로 변경되었습니다.");
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("사용자 정보가 성공적으로 변경되었습니다."));
     }
 
     @PutMapping("/password")
@@ -114,11 +102,7 @@ public class AuthController {
         User user = AuthUtil.getCurrentUser(authentication);
         authService.changePassword(user, changePwd);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "비밀번호가 성공적으로 변경되었습니다.");
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("비밀번호가 성공적으로 변경되었습니다."));
     }
 
     @DeleteMapping("/me")
@@ -126,11 +110,7 @@ public class AuthController {
         User user = AuthUtil.getCurrentUser(authentication);
         authService.deleteUser(user, deleteAccountRequest);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "회원탈퇴되었습니다.");
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponseWrapper.success("회원탈퇴되었습니다."));
     }
 
     @PostMapping("/refresh")
@@ -139,15 +119,15 @@ public class AuthController {
         String refreshToken = authService.getRefreshToken(request);
 
         if (refreshToken == null) {
-            return ResponseEntity.status(401).body("Refresh Token이 없습니다.");
+            return ResponseEntity.status(401).body(ApiResponseWrapper.fail("Refresh Token이 없습니다."));
         }
 
         String newAccessToken = authService.refreshAccessToken(refreshToken);
 
         if (newAccessToken.isBlank()) {
-            return ResponseEntity.status(401).body("Refresh Token이 유효하지 않습니다.");
+            return ResponseEntity.status(401).body(ApiResponseWrapper.fail("Refresh Token이 유효하지 않습니다."));
         }
 
-        return ResponseEntity.ok(Map.of("token", newAccessToken));
+        return ResponseEntity.ok(ApiResponseWrapper.success("토큰 갱신 성공", Map.of("token", newAccessToken)));
     }
 }
