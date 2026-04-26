@@ -204,7 +204,8 @@ public class AdminService {
                         .promptId(p.getId())
                         .promptName(p.getPromptName())
                         .content(p.getContent())
-                        .promptType(p.getPromptType())
+                        .promptTypeId(p.getPromptType().getId())
+                        .promptTypeName(p.getPromptType().getQuizTypeName())
                         .createdAt(p.getCreatedAt())
                         .updatedAt(p.getUpdatedAt())
                         .createdUserName(usernameMap.getOrDefault(p.getCreatedBy(), "unknown"))
@@ -223,7 +224,8 @@ public class AdminService {
                 .promptId(prompt.getId())
                 .promptName(prompt.getPromptName())
                 .content(prompt.getContent())
-                .promptType(prompt.getPromptType())
+                .promptTypeId(prompt.getPromptType().getId())
+                .promptTypeName(prompt.getPromptType().getQuizTypeName())
                 .createdAt(prompt.getCreatedAt())
                 .updatedAt(prompt.getUpdatedAt())
                 .createdUserName(usernameMap.getOrDefault(prompt.getCreatedBy(), "unknown"))
@@ -250,6 +252,11 @@ public class AdminService {
     public void updateQuizType(User user, Long quizTypeId, QuizTypeRequest quizTypeRequest) {
         QuizType quizType = quizTypeRepository.findById(quizTypeId).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 퀴즈 타입입니다. id: " + quizTypeId));
 
+        if(quizType.isUseAi() && !quizTypeRequest.isUseAi()
+            && promptRepository.existsByPromptType_Id(quizTypeId)) {
+            throw new IllegalArgumentException("연결된 프롬프트가 존재하여 useAi를 false로 변경할 수 없습니다.");
+        }
+
         quizType.setQuizTypeName(quizTypeRequest.getQuizTypeName());
         quizType.setQuizTypeDescription(quizTypeRequest.getQuizTypeDescription());
         quizType.setUseAi(quizTypeRequest.isUseAi());
@@ -261,7 +268,7 @@ public class AdminService {
         QuizType quizType = quizTypeRepository.findById(quizTypeId).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 퀴즈 타입입니다. id: " + quizTypeId));
 
         // MEANING_TO_WORD(2)와 WORD_TO_MEANING(1)은 삭제 불가능 하도록
-        if (List.of(1L, 2L).contains(quizType.getId())) {
+        if (List.of("MEANING_TO_WORD", "WORD_TO_MEANING").contains(quizType.getQuizTypeName())) {
             throw new IllegalArgumentException("삭제할 수 없는 기본 퀴즈 타입입니다.");
         }
 

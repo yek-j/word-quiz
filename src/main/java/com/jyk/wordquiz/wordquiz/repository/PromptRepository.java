@@ -10,7 +10,8 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface PromptRepository extends JpaRepository<Prompt, Long> {
-    @Query("SELECT p FROM Prompt p WHERE p.promptName LIKE %:promptName% AND (:quizTypeName IS NULL OR p.promptType.quizTypeName LIKE %:quizTypeName%)")
+    @Query("SELECT p FROM Prompt p WHERE (:promptName IS NULL OR p.promptName LIKE %:promptName%)" +
+            " AND (:quizTypeName IS NULL OR p.promptType.quizTypeName LIKE %:quizTypeName%)")
     Page<Prompt> findByPromptNameAndType(@Param("promptName") String promptName, @Param("quizTypeName") String quizTypeName, Pageable pageable);
 
     boolean existsByPromptType_Id(Long promptTypeId);

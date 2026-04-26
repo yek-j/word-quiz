@@ -158,6 +158,10 @@ public class QuizSessionService {
             }
         } else {
             problemList = aiQuestionService.generationAiQuestions(selectedWords, quizType.getId());
+
+            if (problemList == null || problemList.isEmpty()) {
+                throw new IllegalStateException("AI 퀴즈 문제 생성에 실패했습니다. 프롬프트를 확인해주세요.");
+            }
         }
 
         // 저장

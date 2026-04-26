@@ -47,6 +47,12 @@ public class QuizService {
      */
     @Transactional
     public void createQuiz(User user, QuizParamRequest quizParamRequest) {
+        // 퀴즈 타입
+        if(quizParamRequest.getQuizTypeIds() == null || quizParamRequest.getQuizTypeIds().isEmpty()) {
+            throw new IllegalArgumentException("퀴즈 생성을 위해 퀴즈 타입이 필요합니다.");
+        }
+        
+        // 단어장
         List<Long> wordBookIds = parseAndValidateWordBookIds(quizParamRequest.getWordBookIds());
         
         Quiz newQuiz = new Quiz();
@@ -54,9 +60,14 @@ public class QuizService {
         newQuiz.setDescription(quizParamRequest.getDescription());
         newQuiz.setSharingStatus(quizParamRequest.getSharingStatus());
         newQuiz.setCreatedBy(user);
-
-        // 퀴즈 타입
+        
         List<QuizType> quizTypeList = quizTypeRepository.findByIdIn(quizParamRequest.getQuizTypeIds());
+
+        if(quizTypeList.size() != quizParamRequest.getQuizTypeIds().size()) {
+            throw new EntityNotFoundException("선택한 퀴즈 타입을 찾을 수 없습니다.");
+        }
+        
+
         newQuiz.setAllowedTypes(quizTypeList);
 
         int wordBookSize = 0;

@@ -12,7 +12,8 @@ public class PromptResponse {
     private Long promptId;
     private String promptName;
     private String content;
-    private QuizType promptType;
+    private Long promptTypeId;
+    private String promptTypeName;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String createdUserName;

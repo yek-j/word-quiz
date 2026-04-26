@@ -28,7 +28,7 @@ public class AIQuestionService {
     }
 
     /**
-     * DB에 있는 퀴즈 타입의 Default 프롬프트를 이용해 주어진 단어들F로 퀴즈를 생성한다.
+     * DB에 있는 퀴즈 타입의 Default 프롬프트를 이용해 주어진 단어들로 퀴즈를 생성한다.
      * AI 퀴즈는 정답이 단어(term)를 작성하는 문제만을 생성한다.
      * @param words 퀴즈를 생성해야 할 단어들
      * @return LLM으로 생성한 퀴즈들을 반환한다.
