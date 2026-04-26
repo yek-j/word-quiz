@@ -42,6 +42,14 @@ public class Quiz {
     @OneToMany(mappedBy = "quiz")
     private List<QuizSession> sessions = new ArrayList<>();
 
+    @ManyToMany
+    @JoinTable(
+            name = "quiz_allowed_type",
+            joinColumns = @JoinColumn(name = "quiz_id"),
+            inverseJoinColumns = @JoinColumn(name = "quiz_type_id")
+    )
+    private List<QuizType> allowedTypes = new ArrayList<>();
+
     public void addWordBook(WordBook wordBook) {
         QuizWordBook quizWordBook = new QuizWordBook();
         quizWordBook.setQuiz(this);

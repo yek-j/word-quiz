@@ -3,15 +3,14 @@ package com.jyk.wordquiz.wordquiz.service;
 import com.jyk.wordquiz.wordquiz.common.exception.QuizNotFoundException;
 import com.jyk.wordquiz.wordquiz.model.dto.request.QuizParamRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.QuizResponse;
+import com.jyk.wordquiz.wordquiz.model.dto.response.QuizTypeResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.Quizzes;
 import com.jyk.wordquiz.wordquiz.model.dto.response.QuizzesResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.WordBooks;
-import com.jyk.wordquiz.wordquiz.model.entity.Quiz;
-import com.jyk.wordquiz.wordquiz.model.entity.QuizSession;
-import com.jyk.wordquiz.wordquiz.model.entity.User;
-import com.jyk.wordquiz.wordquiz.model.entity.WordBook;
+import com.jyk.wordquiz.wordquiz.model.entity.*;
 import com.jyk.wordquiz.wordquiz.repository.QuizRepository;
 import com.jyk.wordquiz.wordquiz.repository.QuizSessionRepository;
+import com.jyk.wordquiz.wordquiz.repository.QuizTypeRepository;
 import com.jyk.wordquiz.wordquiz.repository.WordBookRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -29,12 +28,17 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class QuizService {
-    @Autowired
-    private QuizRepository quizRepository;
-    @Autowired
-    private WordBookRepository wordBookRepository;
-    @Autowired
-    private QuizSessionRepository quizSessionRepository;
+    private final QuizRepository quizRepository;
+    private final WordBookRepository wordBookRepository;
+    private final QuizSessionRepository quizSessionRepository;
+    private final QuizTypeRepository quizTypeRepository;
+
+    public QuizService(QuizRepository quizRepository, WordBookRepository wordBookRepository, QuizSessionRepository quizSessionRepository, QuizTypeRepository quizTypeRepository) {
+        this.quizRepository = quizRepository;
+        this.wordBookRepository = wordBookRepository;
+        this.quizSessionRepository = quizSessionRepository;
+        this.quizTypeRepository = quizTypeRepository;
+    }
 
     /**
      * 퀴즈 생성
@@ -43,6 +47,12 @@ public class QuizService {
      */
     @Transactional
     public void createQuiz(User user, QuizParamRequest quizParamRequest) {
+        // 퀴즈 타입
+        if(quizParamRequest.getQuizTypeIds() == null || quizParamRequest.getQuizTypeIds().isEmpty()) {
+            throw new IllegalArgumentException("퀴즈 생성을 위해 퀴즈 타입이 필요합니다.");
+        }
+        
+        // 단어장
         List<Long> wordBookIds = parseAndValidateWordBookIds(quizParamRequest.getWordBookIds());
         
         Quiz newQuiz = new Quiz();
@@ -50,6 +60,15 @@ public class QuizService {
         newQuiz.setDescription(quizParamRequest.getDescription());
         newQuiz.setSharingStatus(quizParamRequest.getSharingStatus());
         newQuiz.setCreatedBy(user);
+        
+        List<QuizType> quizTypeList = quizTypeRepository.findByIdIn(quizParamRequest.getQuizTypeIds());
+
+        if(quizTypeList.size() != quizParamRequest.getQuizTypeIds().size()) {
+            throw new EntityNotFoundException("선택한 퀴즈 타입을 찾을 수 없습니다.");
+        }
+        
+
+        newQuiz.setAllowedTypes(quizTypeList);
 
         int wordBookSize = 0;
         if(!wordBookIds.isEmpty()) {
@@ -90,9 +109,10 @@ public class QuizService {
      * @param sort     : DESC, ASC
      * @param kind     : 볼 수 있는 모든 퀴즈보기(ALL), 자신의 퀴즈만 보기(MY), 친구만 보기(FRIENDS)
      * @param searchId : 검색하려는 사용자 ID
+     * @param quizTypeIds : 필터링할 QuizType ID 리스트 (null/empty면 필터 미적용)
      * @return : QuizzesResponse
      */
-    public QuizzesResponse getQuizList(User user, int page, String criteria, String sort, String kind, Long searchId) {
+    public QuizzesResponse getQuizList(User user, int page, String criteria, String sort, String kind, Long searchId, List<Long> quizTypeIds) {
         Sort.Direction direction = Sort.Direction.DESC;
 
         if(sort.equals("ASC")) {
@@ -101,25 +121,11 @@ public class QuizService {
 
         Pageable pageReq = PageRequest.of(page, 10, Sort.by(direction, criteria));
 
-        Page<Quiz> findQuizzes = null;
+        List<Long> typeFilter = (quizTypeIds == null || quizTypeIds.isEmpty()) ? null : quizTypeIds;
 
-        if (kind.equals("MY")) {
-            if (searchId != null && Objects.equals(user.getId(), searchId)) findQuizzes = quizRepository.findByCreatedBy(user, pageReq);
-            else if(searchId == null) findQuizzes = quizRepository.findByCreatedBy(user, pageReq);
-        } else {
-            if(searchId != null) {
-                findQuizzes = quizRepository.findSearchIdQuizzes(user, searchId, pageReq);
-            } else {
-                if (kind.equals("FRIENDS")) findQuizzes = quizRepository.findByFriendQuizzes(user, pageReq);
-                else findQuizzes = quizRepository.findAccessibleQuizzes(user, pageReq);
-            }
-        }
+        Page<Quiz> findQuizzes = quizRepository.searchQuizzes(user, kind, searchId, typeFilter, pageReq);
 
-        if(findQuizzes == null) {
-            return new QuizzesResponse(null, 0);
-        }
-
-        Page<Quizzes> pageQuizzes = Objects.requireNonNull(findQuizzes).map(q -> new Quizzes(
+        Page<Quizzes> pageQuizzes = findQuizzes.map(q -> new Quizzes(
                 q.getId(), q.getName(), q.getDescription(), q.getCreatedBy().getUsername(), q.getCreatedAt()
         ));
 
@@ -147,6 +153,22 @@ public class QuizService {
         }
 
         return new QuizzesResponse(quizzes, totalPages);
+    }
+
+    /**
+     * 퀴즈 생성 시 사용 가능한 퀴즈 타입 조회.
+     * - useAi = false: 기본 타입 (WORD_TO_MEANING, MEANING_TO_WORD 등)
+     * - useAi = true: 매핑된 Prompt가 등록된 타입만 노출
+     */
+    public List<QuizTypeResponse> getAvailableQuizTypes() {
+        return quizTypeRepository.findAvailableForQuiz().stream()
+                .map(q -> QuizTypeResponse.builder()
+                        .quizTypeId(q.getId())
+                        .quizTypeName(q.getQuizTypeName())
+                        .quizTypeDescription(q.getQuizTypeDescription())
+                        .useAi(q.isUseAi())
+                        .build())
+                .toList();
     }
 
     /**

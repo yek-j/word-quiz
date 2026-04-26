@@ -3,11 +3,15 @@ package com.jyk.wordquiz.wordquiz.controller;
 import com.jyk.wordquiz.wordquiz.common.auth.AuthUtil;
 import com.jyk.wordquiz.wordquiz.model.dto.request.ConfigRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.request.PromptRequest;
+import com.jyk.wordquiz.wordquiz.model.dto.request.PromptValidateRequest;
+import com.jyk.wordquiz.wordquiz.model.dto.request.QuizTypeRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.request.UserRoleRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.AdminUserListResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.ApiResponseWrapper;
 import com.jyk.wordquiz.wordquiz.model.dto.response.ListResultResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.PromptResponse;
+import com.jyk.wordquiz.wordquiz.model.dto.response.PromptValidateResponse;
+import com.jyk.wordquiz.wordquiz.model.dto.response.QuizTypeResponse;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.service.AdminService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -59,6 +63,95 @@ public class AdminController {
         adminService.setUserRole(userId, userRoleRequest);
 
         return ResponseEntity.ok(ApiResponseWrapper.success("사용자 권한 변경 성공입니다."));
+    }
+
+    @Operation(summary = "퀴즈 타입 추가", description = "퀴즈 타입을 추가하는 기능입니다.")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "프롬프트 추가 성공"
+            )
+    })
+    @PostMapping("/quizType")
+    public ResponseEntity<?> addQuizType(Authentication authentication,
+                                         @Parameter(description = "추가할 퀴즈 타입 데이터")
+                                         @RequestBody QuizTypeRequest quizTypeRequest) {
+        User user = AuthUtil.getCurrentUser(authentication);
+        adminService.addQuizType(user, quizTypeRequest);
+
+        return ResponseEntity.ok(ApiResponseWrapper.success("퀴즈 타입 추가 성공입니다."));
+    }
+
+    @Operation(summary = "퀴즈 타입 조회", description = "퀴즈타입 리스트입니다.")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "퀴즈 타입 목록 조회 성공"
+            )
+    })
+    @GetMapping("/quizType")
+    public ResponseEntity<?> getQuizTypeList (@Parameter(description = "검색할 퀴즈 타입 이름")
+                                              @RequestParam(defaultValue = "") String quizTypeName,
+                                              @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
+                                              @RequestParam(required = false, defaultValue = "0", value = "page") int page,
+                                              @Parameter(description = "정렬 기준 (id, quizTypeName, useAi, createdAt, updatedAt, createdBy, lastModifiedBy)", example = "id")
+                                              @RequestParam(required = false, defaultValue = "id", value = "orderby") String criteria,
+                                              @Parameter(description = "정렬 방향 (ASC, DESC)", example = "DESC")
+                                              @RequestParam(required= false, defaultValue = "ASC", value = "sort") String sort) {
+        ListResultResponse result = adminService.getQuizTypeList(page, criteria, sort, quizTypeName);
+
+        return ResponseEntity.ok(ApiResponseWrapper.success("퀴즈 타입 리스트 결과입니다.", result));
+    }
+
+    @Operation(summary = "퀴즈 타입 단건 조회", description = "특정 퀴즈 타입을 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "퀴즈 타입 조회 성공"),
+            @ApiResponse(responseCode = "400", description = "존재하지 않는 퀴즈 타입")
+    })
+    @GetMapping("/quizType/{quizTypeId}")
+    public ResponseEntity<?> getQuizType(@Parameter(description = "조회할 퀴즈 타입 ID") @PathVariable Long quizTypeId) {
+        QuizTypeResponse result = adminService.getQuizType(quizTypeId);
+
+        return ResponseEntity.ok(ApiResponseWrapper.success("퀴즈 타입 결과입니다.", result));
+    }
+
+    @Operation(summary = "퀴즈 타입 수정", description = "특정 퀴즈 타입의 내용을 수정합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "퀴즈 타입 수정 성공"),
+            @ApiResponse(responseCode = "400", description = "존재하지 않는 퀴즈 타입")
+    })
+    @PutMapping("/quizType/{quizTypeId}")
+    public ResponseEntity<?> updateQuizType(Authentication authentication,
+                                            @Parameter(description = "수정할 퀴즈 타입 ID") @PathVariable Long quizTypeId,
+                                            @Parameter(description = "수정할 퀴즈 타입 데이터") @RequestBody QuizTypeRequest quizTypeRequest) {
+        User user = AuthUtil.getCurrentUser(authentication);
+        adminService.updateQuizType(user, quizTypeId, quizTypeRequest);
+
+        return ResponseEntity.ok(ApiResponseWrapper.success("퀴즈 타입 수정 성공입니다."));
+    }
+
+    @Operation(summary = "퀴즈 타입 삭제", description = "특정 퀴즈 타입을 삭제합니다. 매핑된 프롬프트가 있으면 함께 삭제됩니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "퀴즈 타입 삭제 성공"),
+            @ApiResponse(responseCode = "400", description = "존재하지 않는 퀴즈 타입")
+    })
+    @DeleteMapping("/quizType/{quizTypeId}")
+    public ResponseEntity<?> deleteQuizType(Authentication authentication,
+                                            @Parameter(description = "삭제할 퀴즈 타입 ID") @PathVariable Long quizTypeId) {
+        User user = AuthUtil.getCurrentUser(authentication);
+        adminService.deleteQuizType(user, quizTypeId);
+
+        return ResponseEntity.ok(ApiResponseWrapper.success("퀴즈 타입 삭제 성공입니다."));
+    }
+
+    @Operation(summary = "프롬프트 검증", description = "샘플 단어로 LLM을 호출해 프롬프트가 구조화된 출력을 내는지 검증합니다. 저장 전 '검증' 버튼에서 사용합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "검증 결과 (valid=true/false)")
+    })
+    @PostMapping("/prompt/validate")
+    public ResponseEntity<?> validatePrompt(@Valid @RequestBody PromptValidateRequest request) {
+        PromptValidateResponse result = adminService.validatePrompt(request.getContent());
+        return ResponseEntity.ok(ApiResponseWrapper.success("프롬프트 검증 결과입니다.", result));
     }
 
     @Operation(summary = "프롬프트 추가", description = "프롬프트 추가하는 기능입니다.")

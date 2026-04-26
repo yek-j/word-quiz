@@ -1,6 +1,6 @@
 package com.jyk.wordquiz.wordquiz.model.dto.response;
 
-import com.jyk.wordquiz.wordquiz.common.type.QuizType;
+import com.jyk.wordquiz.wordquiz.model.entity.QuizType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

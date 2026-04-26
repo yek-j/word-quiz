@@ -2,7 +2,6 @@ package com.jyk.wordquiz.wordquiz.service;
 
 import com.jyk.wordquiz.wordquiz.common.exception.QuizNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.exception.QuizSessionNotFoundException;
-import com.jyk.wordquiz.wordquiz.common.type.QuizType;
 import com.jyk.wordquiz.wordquiz.common.type.SharingStatus;
 import com.jyk.wordquiz.wordquiz.common.type.UserConnectionStatus;
 import com.jyk.wordquiz.wordquiz.common.type.UserConnectionType;
@@ -12,10 +11,9 @@ import com.jyk.wordquiz.wordquiz.model.dto.response.*;
 import com.jyk.wordquiz.wordquiz.model.entity.*;
 import com.jyk.wordquiz.wordquiz.repository.QuizRepository;
 import com.jyk.wordquiz.wordquiz.repository.QuizSessionRepository;
+import com.jyk.wordquiz.wordquiz.repository.QuizTypeRepository;
 import com.jyk.wordquiz.wordquiz.repository.UserConnectionRepository;
-import com.jyk.wordquiz.wordquiz.repository.UserRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -26,13 +24,19 @@ public class QuizSessionService {
     private final QuizRepository quizRepository;
     private final QuizSessionRepository quizSessionRepository;
     private final UserConnectionRepository userConnectionRepository;
+    private final QuizTypeRepository quizTypeRepository;
     private final AIQuestionService aiQuestionService;
 
 
-    public QuizSessionService(QuizRepository quizRepository, QuizSessionRepository quizSessionRepository, UserConnectionRepository userConnectionRepository, AIQuestionService aiQuestionService) {
+    public QuizSessionService(QuizRepository quizRepository,
+                              QuizSessionRepository quizSessionRepository,
+                              UserConnectionRepository userConnectionRepository,
+                              QuizTypeRepository quizTypeRepository,
+                              AIQuestionService aiQuestionService) {
         this.quizRepository = quizRepository;
         this.quizSessionRepository = quizSessionRepository;
         this.userConnectionRepository = userConnectionRepository;
+        this.quizTypeRepository = quizTypeRepository;
         this.aiQuestionService = aiQuestionService;
     }
 
@@ -42,13 +46,13 @@ public class QuizSessionService {
     private static final String KEY_ORDER = "Order";
 
     /**
-     * Start a quiz session for the given user: return an existing active session if one exists,
-     * otherwise create and persist a new session with up to 20 questions based on the specified quiz and type.
+     * 지정된 사용자에 대한 퀴즈 세션을 시작합니다: 활성 세션이 존재하면 해당 세션을 반환하고,
+     * 그렇지 않으면 지정된 퀴즈와 유형에 따라 최대 20개의 문항으로 구성된 새 세션을 생성하고 저장합니다.
      *
-     * @param user the user starting the quiz
-     * @param quizStartReq request data containing the target quiz ID and desired quiz type
-     * @return a QuizSessionResponse containing the session ID, the list of problems (with translation when applicable), and the quiz type
-     * @throws QuizNotFoundException if the quiz does not exist or the user is not permitted to start it
+     * @param user 퀴즈를 시작하는 사용자
+     * @param quizStartReq 대상 퀴즈 ID와 원하는 퀴즈 유형이 포함된 데이터를 요청합니다
+     * @return 세션 ID, 문제 목록(해당되는 경우 번역 포함) 및 퀴즈 유형을 포함하는 QuizSessionResponse
+     * @throws QuizNotFoundException 퀴즈가 존재하지 않거나 사용자가 퀴즈를 시작할 권한이 없는 경우
      */
     @Transactional
     public QuizSessionResponse startQuiz(User user, QuizStartRequest quizStartReq) {
@@ -59,6 +63,10 @@ public class QuizSessionService {
         // 기존 세션이 있다면 사용하기
         Optional<QuizSession> activeSession = quizSessionRepository.findByUserAndQuizAndIsQuizActive(user, quiz, true);
 
+        QuizType quizType = quizTypeRepository.findById(quizStartReq.getQuizTypeId())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 퀴즈 타입입니다. id: " + quizStartReq.getQuizTypeId()));
+
+        // QuizTypeId를 찾을 수 없다면 WORD_TO_MEANING, MEANING_TO_WORD만 지원한다.
         if(activeSession.isPresent()) {
             List<QuizQuestion> activeQusetions = activeSession.get().getQuizQuestions();
             activeQusetions.sort(Comparator.comparing(QuizQuestion::getQuestionOrder));
@@ -71,13 +79,11 @@ public class QuizSessionService {
                 String a = word.getTerm();
                 String t = "";
 
-                if(quizStartReq.getQuizType() == QuizType.WORD_TO_MEANING) {
+                if(quizType.getQuizTypeName().equalsIgnoreCase("WORD_TO_MEANING")) {
                     p = word.getTerm();
                     a = word.getDescription();
-                }
-                else if(quizStartReq.getQuizType() == QuizType.AI_FILL_IN_BLANK) {
+                } else if(quizType.isUseAi()) {
                     p = q.getAiGeneratedSentence();
-                    a = word.getTerm();
                     t = q.getAiGeneratedTranslation();
                 }
 
@@ -119,51 +125,50 @@ public class QuizSessionService {
 
         List<QuizProblem> problemList = new ArrayList<>();
 
-
         // QuizSession 생성
         QuizSession quizSession = new QuizSession();
         quizSession.setQuiz(quiz);
         quizSession.setUser(user);
         quizSession.setQuizActive(true);
-        quizSession.setQuizType(quizStartReq.getQuizType());
+        quizSession.setQuizType(quizType);
 
         int i = 1;
-        for(Word w : selectedWords) {
-            // QuizQuestion 순서대로 문제 추가
-            QuizQuestion question = new QuizQuestion();
 
-            question.setWord(w);
-            question.setQuestionOrder(i++);
-            question.setIsCorrect(null);
+        if (!quizType.isUseAi()) {
+            for (Word w : selectedWords) {
+                // QuizQuestion 순서대로 문제 추가
+                QuizQuestion question = new QuizQuestion();
 
-            String problem = w.getDescription();
-            String answer = null;
-            String translation = null;
+                question.setWord(w);
+                question.setQuestionOrder(i++);
+                question.setIsCorrect(null);
 
-            if(quizStartReq.getQuizType() == QuizType.WORD_TO_MEANING) {
-                problem = w.getTerm();
+                String problem = w.getDescription();
+                String answer = null;
+                String translation = null;
+
+                if (quizType.getQuizTypeName().equalsIgnoreCase("WORD_TO_MEANING")) {
+                    problem = w.getTerm();
+                }
+
+                quizSession.addQuestion(question);
+
+                QuizProblem qp = new QuizProblem(w.getId(), problem, answer, translation, null);
+                problemList.add(qp);
             }
-            else if(quizStartReq.getQuizType() == QuizType.AI_FILL_IN_BLANK) {
-                BlankQuizResponse blankProblem = aiQuestionService.generationBlankQuestion(w);
+        } else {
+            problemList = aiQuestionService.generationAiQuestions(selectedWords, quizType.getId());
 
-                problem = blankProblem.sentence();
-                translation = blankProblem.translation();
-
-                question.setAiGeneratedSentence(problem);
-                question.setAiGeneratedTranslation(translation);
+            if (problemList == null || problemList.isEmpty()) {
+                throw new IllegalStateException("AI 퀴즈 문제 생성에 실패했습니다. 프롬프트를 확인해주세요.");
             }
-
-            quizSession.addQuestion(question);
-
-            QuizProblem qp = new QuizProblem(w.getId(), problem, answer, translation, null);
-            problemList.add(qp);
         }
 
         // 저장
         QuizSession savedSession = quizSessionRepository.save(quizSession);
         Long sessionId = savedSession.getId();
 
-        return new QuizSessionResponse(sessionId, problemList, quizStartReq.getQuizType());
+        return new QuizSessionResponse(sessionId, problemList, quizType);
     }
 
     /**
@@ -245,7 +250,7 @@ public class QuizSessionService {
 
         for (QuizQuestion q : quizQuestions) {
             if (Objects.equals(q.getWord().getId(), quizAnswerReq.getWordId())) {
-                if (quizType == QuizType.WORD_TO_MEANING) {
+                if (quizType.getQuizTypeName().equalsIgnoreCase("WORD_TO_MEANING")) {
                     isCorrect = Objects.equals(q.getWord().getDescription(), quizAnswerReq.getAnswer());
                     answerAndCorrect.put(KEY_ANSWER, q.getWord().getDescription());
                 } else {

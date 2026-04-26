@@ -4,6 +4,7 @@ import com.jyk.wordquiz.wordquiz.common.auth.AuthUtil;
 import com.jyk.wordquiz.wordquiz.model.dto.request.QuizParamRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.ApiResponseWrapper;
 import com.jyk.wordquiz.wordquiz.model.dto.response.QuizResponse;
+import com.jyk.wordquiz.wordquiz.model.dto.response.QuizTypeResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.QuizzesResponse;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.service.QuizService;
@@ -12,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/quizzes")
@@ -33,12 +36,20 @@ public class QuizController {
                                          @RequestParam(required = false, defaultValue = "id", value = "orderby") String criteria,
                                          @RequestParam(required= false, defaultValue = "DESC", value = "sort") String sort,
                                          @RequestParam(required = false, defaultValue = "ALL", value = "kind") String kind,
-                                         @RequestParam(required = false, value = "searchId") Long searchId) {
+                                         @RequestParam(required = false, value = "searchId") Long searchId,
+                                         @RequestParam(required = false, value = "quizTypeIds") List<Long> quizTypeIds) {
 
         User user = AuthUtil.getCurrentUser(authentication);
-        QuizzesResponse result = quizService.getQuizList(user, page, criteria, sort.toUpperCase(), kind, searchId);
+        QuizzesResponse result = quizService.getQuizList(user, page, criteria, sort.toUpperCase(), kind, searchId, quizTypeIds);
 
         return ResponseEntity.ok(ApiResponseWrapper.success("퀴즈 리스트를 불러왔습니다.", result));
+    }
+
+    @GetMapping("/types")
+    public ResponseEntity<?> getAvailableQuizTypes() {
+        List<QuizTypeResponse> result = quizService.getAvailableQuizTypes();
+
+        return ResponseEntity.ok(ApiResponseWrapper.success("사용 가능한 퀴즈 타입 리스트입니다.", result));
     }
 
     @GetMapping("/{quizId}")

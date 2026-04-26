@@ -1,6 +1,5 @@
 package com.jyk.wordquiz.wordquiz.model.dto.request;
 
-import com.jyk.wordquiz.wordquiz.common.type.PromptType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -10,9 +9,9 @@ import lombok.Getter;
 @Schema(description = "프롬프트 추가 요청")
 public class PromptRequest {
 
-    @Schema(description = "프롬프트 타입", example = "AI_FILL_IN_BLANK")
+    @Schema(description = "프롬프트 타입(퀴즈 타입)", example = "1")
     @NotNull(message = "프롬프트 타입은 필수입니다.")
-    private PromptType promptType;
+    private Long promptTypeId;
 
     @Schema(description = "프롬프트 이름", example = "빈칸 문제 기본 프롬프트")
     @NotBlank(message = "프롬프트 이름은 필수입니다.")
