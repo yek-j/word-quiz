@@ -97,7 +97,16 @@ public class QuizService {
 
         List<WordBooks> wordBooks = quiz.getQuizWordBooks().stream().map(WordBooks::new).toList();
 
-        return new QuizResponse(quiz.getName(), quiz.getCreatedBy().getUsername(), quiz.getSharingStatus(), quiz.getDescription(), wordBooks);
+        List<QuizTypeResponse> quizTypes = quiz.getAllowedTypes().stream()
+                .map(q -> QuizTypeResponse.builder()
+                        .quizTypeId(q.getId())
+                        .quizTypeName(q.getQuizTypeName())
+                        .quizTypeDescription(q.getQuizTypeDescription())
+                        .useAi(q.isUseAi())
+                        .build())
+                .toList();
+
+        return new QuizResponse(quiz.getName(), quiz.getCreatedBy().getUsername(), quiz.getSharingStatus(), quiz.getDescription(), wordBooks, quizTypes);
     }
 
     /**
