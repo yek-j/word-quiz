@@ -146,7 +146,7 @@ public class JwtTokenProvider {
      * 블랙리스트 등록/조회에 사용.
      */
     public String getJti(String token) {
-        String raw = token.contains(" ") ? token.split(" ")[1].trim() : token;
+        String raw = extractRawToken(token);
         Jws<Claims> claimsJwt = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(raw);
         return claimsJwt.getPayload().getId();
     }
@@ -155,8 +155,30 @@ public class JwtTokenProvider {
      * 토큰 만료 시점(epoch millis)을 반환한다. 블랙리스트 TTL 계산에 사용.
      */
     public long getExpirationMillis(String token) {
-        String raw = token.contains(" ") ? token.split(" ")[1].trim() : token;
+        String raw = extractRawToken(token);
         Jws<Claims> claimsJwt = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(raw);
         return claimsJwt.getPayload().getExpiration().getTime();
+    }
+
+    /**
+     * 토큰 검증
+     * @param token 토큰
+     * @return 검증 완료된 토큰 반환
+     */
+    private String extractRawToken(String token) {
+        if (token == null) {
+            throw new IllegalArgumentException("token is required");
+        }
+
+        String trimmed = token.trim();
+        if (trimmed.regionMatches(true, 0, "Bearer ", 0, 7)) {
+            trimmed = trimmed.substring(7).trim();
+        }
+
+        if (trimmed.isEmpty() || trimmed.contains(" ")) {
+            throw new IllegalArgumentException("invalid bearer token");
+        }
+
+        return trimmed;
     }
 }
