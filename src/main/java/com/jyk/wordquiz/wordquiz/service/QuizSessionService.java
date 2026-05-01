@@ -41,9 +41,9 @@ public class QuizSessionService {
     }
 
 
-    private static final String KEY_ANSWER = "Answer";
-    private static final String KEY_CORRECT = "Correct";
-    private static final String KEY_ORDER = "Order";
+    private static final String KEY_ANSWER = "answer";
+    private static final String KEY_CORRECT = "correct";
+    private static final String KEY_ORDER = "order";
 
     /**
      * 지정된 사용자에 대한 퀴즈 세션을 시작합니다: 활성 세션이 존재하면 해당 세션을 반환하고,
@@ -79,7 +79,7 @@ public class QuizSessionService {
                 String a = word.getTerm();
                 String t = "";
 
-                if(quizType.getQuizTypeName().equalsIgnoreCase("WORD_TO_MEANING")) {
+                if(activeSession.get().getQuizType().getQuizTypeName().equalsIgnoreCase("WORD_TO_MEANING")) {
                     p = word.getTerm();
                     a = word.getDescription();
                 } else if(quizType.isUseAi()) {
@@ -161,6 +161,22 @@ public class QuizSessionService {
 
             if (problemList == null || problemList.isEmpty()) {
                 throw new IllegalStateException("AI 퀴즈 문제 생성에 실패했습니다. 프롬프트를 확인해주세요.");
+            }
+
+            Map<Long, Word> wordById = new HashMap<>();
+            for (Word w : selectedWords) {
+                wordById.put(w.getId(), w);
+            }
+            for (QuizProblem qp : problemList) {
+                Word w = wordById.get(qp.getWordId());
+                if (w == null) continue;
+                QuizQuestion question = new QuizQuestion();
+                question.setWord(w);
+                question.setQuestionOrder(i++);
+                question.setIsCorrect(null);
+                question.setAiGeneratedSentence(qp.getProblem());
+                question.setAiGeneratedTranslation(qp.getTranslation());
+                quizSession.addQuestion(question);
             }
         }
 
@@ -261,6 +277,9 @@ public class QuizSessionService {
                 answerAndCorrect.put(KEY_CORRECT , isCorrect);
                 answerAndCorrect.put(KEY_ORDER, q.getQuestionOrder());
             }
+        }
+        if (answerAndCorrect.isEmpty()) {
+            throw new IllegalArgumentException("해당 wordId에 대한 문제를 찾을 수 없습니다. wordId=" + quizAnswerReq.getWordId());
         }
         return answerAndCorrect;
     }

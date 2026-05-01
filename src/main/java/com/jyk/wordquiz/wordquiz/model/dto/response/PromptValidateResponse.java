@@ -3,5 +3,5 @@ package com.jyk.wordquiz.wordquiz.model.dto.response;
 public record PromptValidateResponse(
         boolean valid,
         String message,
-        AiQuizResponse sample
+        AiQuizListResponse sample
 ) {}

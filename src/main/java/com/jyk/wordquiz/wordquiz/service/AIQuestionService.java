@@ -1,11 +1,11 @@
 package com.jyk.wordquiz.wordquiz.service;
 
 import com.jyk.wordquiz.wordquiz.model.dto.response.AiQuizListResponse;
-import com.jyk.wordquiz.wordquiz.model.dto.response.AiQuizResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.QuizProblem;
 import com.jyk.wordquiz.wordquiz.model.entity.Prompt;
 import com.jyk.wordquiz.wordquiz.model.entity.Word;
 import com.jyk.wordquiz.wordquiz.repository.PromptRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 @Service
+@Slf4j
 public class AIQuestionService {
     private final ChatClient chatClient;
     private final PromptRepository promptRepository;
@@ -42,10 +43,14 @@ public class AIQuestionService {
                 .map(w -> "- wordId=" + w.getId() + ", term=" + w.getTerm() + ", meaning=" + w.getDescription())
                 .collect(Collectors.joining("\n"));
 
+        //log.info("wordsParam = {}", wordsParam);
+
         AiQuizListResponse response = chatClient.prompt()
                 .user(u -> u.text(prompt.getContent()).param("words", wordsParam))
                 .call()
                 .entity(AiQuizListResponse.class);
+
+        //log.info("prompt = {}", prompt.getContent());
 
         Map<Long, Word> wordById = words.stream()
                 .collect(Collectors.toMap(Word::getId, w -> w));
@@ -63,20 +68,23 @@ public class AIQuestionService {
     }
 
     /**
-     * 샘플 단어로 프롬프트를 실행해 LLM 응답을 받아온다.
+     * 샘플 단어 목록으로 프롬프트를 실행해 LLM 응답을 받아온다.
      * 어드민의 프롬프트 검증("검증" 버튼)에서 사용한다.
-     * @param promptContent 검증할 프롬프트 템플릿 (예: "...{word}...{meaning}...")
-     * @param sampleTerm 샘플 단어
-     * @param sampleMeaning 샘플 단어의 의미
-     * @return LLM이 반환한 AiQuizResponse (파싱 실패 시 예외)
+     * @param promptContent 검증할 프롬프트 템플릿 (예: "...{words}...")
+     * @param samples 샘플 단어 목록
+     * @return LLM이 반환한 AiQuizListResponse (파싱 실패 시 예외)
      */
-    public AiQuizResponse runWithSample(String promptContent, String sampleTerm, String sampleMeaning) {
+    public AiQuizListResponse runWithSample(String promptContent, List<SampleWord> samples) {
+        String wordsParam = samples.stream()
+                .map(s -> "- wordId=" + s.id() + ", term=" + s.term() + ", meaning=" + s.meaning())
+                .collect(Collectors.joining("\n"));
+
         return chatClient
                 .prompt()
-                .user(u -> u.text(promptContent)
-                        .param("word", sampleTerm)
-                        .param("meaning", sampleMeaning))
+                .user(u -> u.text(promptContent).param("words", wordsParam))
                 .call()
-                .entity(AiQuizResponse.class);
+                .entity(AiQuizListResponse.class);
     }
+
+    public record SampleWord(Long id, String term, String meaning) {}
 }
