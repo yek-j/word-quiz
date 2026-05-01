@@ -4,6 +4,7 @@ import com.jyk.wordquiz.wordquiz.common.auth.AuthUtil;
 import com.jyk.wordquiz.wordquiz.model.dto.request.*;
 import com.jyk.wordquiz.wordquiz.model.dto.response.ApiResponseWrapper;
 import com.jyk.wordquiz.wordquiz.model.dto.response.LoginResponse;
+import com.jyk.wordquiz.wordquiz.model.dto.response.RefreshTokenResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.UserInfoResponse;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.service.AuthService;
@@ -61,11 +62,13 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(Authentication authentication,
+                                    HttpServletRequest request,
                                     HttpServletResponse response) {
         User user = AuthUtil.getCurrentUser(authentication);
 
-        // redis에서 refreshToken 삭제
-        authService.deleteRefreshToken(user.getId());
+        // redis에서 refreshToken 삭제 + 현재 access token jti를 블랙리스트에 등록
+        String accessTokenHeader = request.getHeader("Authorization");
+        authService.logout(user.getId(), accessTokenHeader);
 
         // 쿠키 만료 시키기
         ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
@@ -114,7 +117,8 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<?> refreshToken(HttpServletRequest request) {
+    public ResponseEntity<?> refreshToken(HttpServletRequest request,
+                                          HttpServletResponse response) {
         // 쿠키에서 refreshToken 꺼내기
         String refreshToken = authService.getRefreshToken(request);
 
@@ -122,12 +126,23 @@ public class AuthController {
             return ResponseEntity.status(401).body(ApiResponseWrapper.fail("Refresh Token이 없습니다."));
         }
 
-        String newAccessToken = authService.refreshAccessToken(refreshToken);
+        // Refresh Token Rotation: 새 access + 새 refresh 발급
+        RefreshTokenResponse rotated = authService.refreshAccessToken(refreshToken);
 
-        if (newAccessToken.isBlank()) {
+        if (rotated == null) {
             return ResponseEntity.status(401).body(ApiResponseWrapper.fail("Refresh Token이 유효하지 않습니다."));
         }
 
-        return ResponseEntity.ok(ApiResponseWrapper.success("토큰 갱신 성공", Map.of("token", newAccessToken)));
+        // 새 refresh token을 HttpOnly 쿠키로 다시 내려준다
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", rotated.refreshToken())
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(7 * 24 * 60 * 60)
+                .sameSite("Strict")
+                .build();
+        response.addHeader("Set-Cookie", cookie.toString());
+
+        return ResponseEntity.ok(ApiResponseWrapper.success("토큰 갱신 성공", Map.of("token", rotated.accessToken())));
     }
 }
