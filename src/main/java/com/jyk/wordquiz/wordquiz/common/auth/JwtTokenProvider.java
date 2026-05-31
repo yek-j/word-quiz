@@ -19,6 +19,10 @@ import java.util.*;
 @RequiredArgsConstructor
 @Component
 public class JwtTokenProvider {
+    public static final String TOKEN_TYPE_ACCESS = "access";
+    public static final String TOKEN_TYPE_REFRESH = "refresh";
+    private static final String CLAIM_TYPE = "type";
+
     @Value("${jwt.access-token-expire-minutes}")
     private long ACCESS_TOKEN_EXPIRE;
     @Value("${jwt.refresh-token-expire-days}")
@@ -44,10 +48,12 @@ public class JwtTokenProvider {
         long nowMillis = System.currentTimeMillis();
 
         return Jwts.builder()
+                .id(UUID.randomUUID().toString())
                 .subject(user.getId().toString())
                 .expiration(new Date(nowMillis + ACCESS_TOKEN_EXPIRE * 60 * 1000))
                 .claim("email", user.getEmail())
                 .claim("username", user.getUsername())
+                .claim(CLAIM_TYPE, TOKEN_TYPE_ACCESS)
                 .signWith(secretKey)
                 .compact();
     }
@@ -61,8 +67,10 @@ public class JwtTokenProvider {
         long nowMillis = System.currentTimeMillis();
 
         return Jwts.builder()
+                .id(UUID.randomUUID().toString())
                 .subject(userId.toString())
                 .expiration(new Date(nowMillis + REFRESH_TOKEN_EXPIRE * 24 * 60 * 60 * 1000))
+                .claim(CLAIM_TYPE, TOKEN_TYPE_REFRESH)
                 .signWith(secretKey)
                 .compact();
     }
@@ -77,30 +85,44 @@ public class JwtTokenProvider {
         return request.getHeader("Authorization");
     }
 
+    /**
+     * Access Token 검증.
+     * 1) Bearer prefix 확인
+     * 2) 서명/만료 검증
+     * 3) type=access 검증 (refresh 토큰을 access로 사용하는 것을 차단)
+     */
     public boolean validateToken(String token) {
         if(token == null) return false;
 
         try {
             // Bearer
-            if (!token.substring(0, "BEARER ".length()).equalsIgnoreCase("BEARER ")) {
+            if (token.length() < "BEARER ".length()
+                || !token.substring(0, "BEARER ".length()).equalsIgnoreCase("BEARER ")) {
                 return false;
-            } else {
-                token = token.split(" ")[1].trim();
             }
-            Jws<Claims> claims = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token);
+            String raw = token.split(" ")[1].trim();
+            Jws<Claims> claims = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(raw);
 
-            return !claims.getPayload().getExpiration().before(new Date()); // 현재 시간보다 지났다면 만료
+            Claims payload = claims.getPayload();
+            if (payload.getExpiration().before(new Date())) return false;
+            return TOKEN_TYPE_ACCESS.equals(payload.get(CLAIM_TYPE, String.class));
         } catch (Exception e) {
             return false;
         }
     }
 
+    /**
+     * Refresh Token 검증. type=refresh 검증 포함.
+     */
     public boolean validateRefreshToken(String token) {
+        if (token == null) return false;
         try {
             Jws<Claims> claims = Jwts.parser()
                     .verifyWith(secretKey).build()
                     .parseSignedClaims(token);
-            return !claims.getPayload().getExpiration().before(new Date());
+            Claims payload = claims.getPayload();
+            if (payload.getExpiration().before(new Date())) return false;
+            return TOKEN_TYPE_REFRESH.equals(payload.get(CLAIM_TYPE, String.class));
         } catch (Exception e) {
             return false;
         }
@@ -117,5 +139,46 @@ public class JwtTokenProvider {
         Jws<Claims> claimsJwt = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token);
         String subject = claimsJwt.getPayload().getSubject();
         return Long.valueOf(subject);
+    }
+
+    /**
+     * 'Bearer xxx' 형식 또는 raw 토큰에서 jti(고유 식별자)를 추출한다.
+     * 블랙리스트 등록/조회에 사용.
+     */
+    public String getJti(String token) {
+        String raw = extractRawToken(token);
+        Jws<Claims> claimsJwt = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(raw);
+        return claimsJwt.getPayload().getId();
+    }
+
+    /**
+     * 토큰 만료 시점(epoch millis)을 반환한다. 블랙리스트 TTL 계산에 사용.
+     */
+    public long getExpirationMillis(String token) {
+        String raw = extractRawToken(token);
+        Jws<Claims> claimsJwt = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(raw);
+        return claimsJwt.getPayload().getExpiration().getTime();
+    }
+
+    /**
+     * 토큰 검증
+     * @param token 토큰
+     * @return 검증 완료된 토큰 반환
+     */
+    private String extractRawToken(String token) {
+        if (token == null) {
+            throw new IllegalArgumentException("token is required");
+        }
+
+        String trimmed = token.trim();
+        if (trimmed.regionMatches(true, 0, "Bearer ", 0, 7)) {
+            trimmed = trimmed.substring(7).trim();
+        }
+
+        if (trimmed.isEmpty() || trimmed.contains(" ")) {
+            throw new IllegalArgumentException("invalid bearer token");
+        }
+
+        return trimmed;
     }
 }

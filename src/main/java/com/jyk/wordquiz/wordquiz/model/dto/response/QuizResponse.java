@@ -14,4 +14,5 @@ public class QuizResponse {
     private SharingStatus sharingStatus;
     private String description;
     private List<WordBooks> quizWordBooks;
+    private List<QuizTypeResponse> quizTypes;
 }

@@ -7,7 +7,7 @@ import com.jyk.wordquiz.wordquiz.model.dto.request.QuizTypeRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.request.UserRoleRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.AdminUserListResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.AdminUsers;
-import com.jyk.wordquiz.wordquiz.model.dto.response.AiQuizResponse;
+import com.jyk.wordquiz.wordquiz.model.dto.response.AiQuizListResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.ListResultResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.PromptResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.PromptValidateResponse;
@@ -31,8 +31,10 @@ import java.util.stream.Stream;
 
 @Service
 public class AdminService {
-    private static final String SAMPLE_TERM = "apple";
-    private static final String SAMPLE_MEANING = "사과 (과일의 한 종류)";
+    private static final List<AIQuestionService.SampleWord> SAMPLE_WORDS = List.of(
+            new AIQuestionService.SampleWord(1L, "apple", "사과 (과일의 한 종류)"),
+            new AIQuestionService.SampleWord(2L, "book", "책, 서적")
+    );
 
     private final UserRepository userRepository;
     private final LoginLogRepository loginLogRepository;
@@ -308,33 +310,51 @@ public class AdminService {
     }
 
     /**
-     * 어드민이 "검증" 버튼을 눌렀을 때, 샘플 단어로 LLM을 호출해
+     * 어드민이 "검증" 버튼을 눌렀을 때, 샘플 단어 목록으로 LLM을 호출해
      * 프롬프트가 구조화된 출력을 내고 정답 단어가 sentence에 노출되지 않는지 검사한다.
      * 저장/수정 자체는 막지 않으며, 프론트가 valid=true인 것만 저장하도록 게이트한다.
      */
     public PromptValidateResponse validatePrompt(String promptContent) {
-        AiQuizResponse sample;
+        AiQuizListResponse sample;
         try {
-            sample = aiQuestionService.runWithSample(promptContent, SAMPLE_TERM, SAMPLE_MEANING);
+            sample = aiQuestionService.runWithSample(promptContent, SAMPLE_WORDS);
         } catch (Exception e) {
             return new PromptValidateResponse(false, "LLM 호출 또는 응답 파싱 실패: " + e.getMessage(), null);
         }
 
-        if (sample == null) {
-            return new PromptValidateResponse(false, "응답이 비어있습니다.", null);
+        if (sample == null || sample.problems() == null || sample.problems().isEmpty()) {
+            return new PromptValidateResponse(false, "응답이 비어있습니다.", sample);
         }
-        if (sample.sentence() == null || sample.sentence().isBlank()) {
-            return new PromptValidateResponse(false, "sentence가 비어있습니다.", sample);
-        }
-        if (sample.translation() == null || sample.translation().isBlank()) {
-            return new PromptValidateResponse(false, "translation이 비어있습니다.", sample);
-        }
-        if (sample.sentence().toLowerCase().contains(SAMPLE_TERM.toLowerCase())) {
+
+        if (sample.problems().size() != SAMPLE_WORDS.size()) {
             return new PromptValidateResponse(
                     false,
-                    "정답 단어(" + SAMPLE_TERM + ")가 sentence에 그대로 노출됩니다. 빈칸 처리되어야 합니다.",
+                    "응답 개수 불일치 (요청: " + SAMPLE_WORDS.size() + ", 응답: " + sample.problems().size() + ")",
                     sample
             );
+        }
+
+        Map<Long, AIQuestionService.SampleWord> sampleById = SAMPLE_WORDS.stream()
+                .collect(Collectors.toMap(AIQuestionService.SampleWord::id, s -> s));
+
+        for (AiQuizListResponse.Item item : sample.problems()) {
+            if (item.wordId() == null || !sampleById.containsKey(item.wordId())) {
+                return new PromptValidateResponse(false, "응답에 알 수 없는 wordId가 포함됨: " + item.wordId(), sample);
+            }
+            if (item.sentence() == null || item.sentence().isBlank()) {
+                return new PromptValidateResponse(false, "sentence가 비어있습니다. (wordId=" + item.wordId() + ")", sample);
+            }
+            if (item.translation() == null || item.translation().isBlank()) {
+                return new PromptValidateResponse(false, "translation이 비어있습니다. (wordId=" + item.wordId() + ")", sample);
+            }
+            String term = sampleById.get(item.wordId()).term();
+            if (item.sentence().toLowerCase().contains(term.toLowerCase())) {
+                return new PromptValidateResponse(
+                        false,
+                        "정답 단어(" + term + ")가 sentence에 그대로 노출됩니다. 빈칸 처리되어야 합니다.",
+                        sample
+                );
+            }
         }
 
         return new PromptValidateResponse(true, "검증 성공", sample);

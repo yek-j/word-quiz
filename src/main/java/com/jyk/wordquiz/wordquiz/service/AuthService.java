@@ -4,6 +4,7 @@ import com.jyk.wordquiz.wordquiz.common.auth.JwtTokenProvider;
 import com.jyk.wordquiz.wordquiz.common.exception.DuplicateUserException;
 import com.jyk.wordquiz.wordquiz.model.dto.request.*;
 import com.jyk.wordquiz.wordquiz.model.dto.response.LoginResponse;
+import com.jyk.wordquiz.wordquiz.model.dto.response.RefreshTokenResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.UserInfoResponse;
 import com.jyk.wordquiz.wordquiz.model.entity.LoginLog;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
@@ -22,13 +23,20 @@ import java.util.Optional;
 public class AuthService {
 
     private final RefreshTokenService refreshTokenService;
+    private final TokenBlacklistService tokenBlacklistService;
     private final UserRepository userRepository;
     private final LoginLogRepository loginLogRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider provider;
 
-    public AuthService(RefreshTokenService refreshTokenService, UserRepository userRepository, LoginLogRepository loginLogRepository, PasswordEncoder passwordEncoder, JwtTokenProvider provider) {
+    public AuthService(RefreshTokenService refreshTokenService,
+                       TokenBlacklistService tokenBlacklistService,
+                       UserRepository userRepository,
+                       LoginLogRepository loginLogRepository,
+                       PasswordEncoder passwordEncoder,
+                       JwtTokenProvider provider) {
         this.refreshTokenService = refreshTokenService;
+        this.tokenBlacklistService = tokenBlacklistService;
         this.userRepository = userRepository;
         this.loginLogRepository = loginLogRepository;
         this.passwordEncoder = passwordEncoder;
@@ -153,27 +161,52 @@ public class AuthService {
     }
 
     /**
-     * refresh token 검증 후 access token 발급
-     * @param refreshToken: 토큰
-     * @return new access token
+     * Refresh Token Rotation: 검증 후 새 access + 새 refresh를 함께 발급한다.
+     * 검증 실패 또는 Redis의 토큰과 불일치 시 null 반환.
+     * @param refreshToken: 쿠키에서 꺼낸 refresh token
+     * @return 새 access/refresh 페어 (실패 시 null)
      */
-    public String refreshAccessToken(String refreshToken) {
-        // 유효기간 확인
-        if(!provider.validateRefreshToken(refreshToken)) return "";
+    public RefreshTokenResponse refreshAccessToken(String refreshToken) {
+        // 유효기간 + type=refresh 확인
+        if(!provider.validateRefreshToken(refreshToken)) return null;
 
-        // userId 가져오기
         Long userId = provider.getSubject(refreshToken);
-
         String redisRefreshToken = refreshTokenService.findRefreshToken(userId);
 
-        if (refreshToken.equals(redisRefreshToken)) {
-            Optional<User> user = userRepository.findById(userId);
-            if (user.isPresent()) {
-                return provider.createAccessToken(user.get());
-            }
-        }
+        // 저장된 refresh와 동일해야 함 (재사용/탈취 방지)
+        if (!refreshToken.equals(redisRefreshToken)) return null;
 
-        return "";
+        Optional<User> user = userRepository.findById(userId);
+        if (user.isEmpty()) return null;
+
+        String newAccess = provider.createAccessToken(user.get());
+        String newRefresh = provider.createRefreshToken(userId);
+
+        // 기존 refresh 폐기 + 새 refresh 저장 (TTL 갱신)
+        refreshTokenService.refreshTokenSave(userId, newRefresh);
+
+        return new RefreshTokenResponse(newAccess, newRefresh);
+    }
+
+    /**
+     * 로그아웃 처리.
+     * - Redis의 refresh token 삭제
+     * - 현재 access token이 있다면 jti를 블랙리스트에 등록(만료시각까지 TTL)
+     * @param userId: 사용자 ID
+     * @param accessTokenHeader: 'Bearer xxx' 형식 또는 raw access token (nullable)
+     */
+    public void logout(Long userId, String accessTokenHeader) {
+        refreshTokenService.deleteRefreshToken(userId);
+
+        if (accessTokenHeader == null) return;
+        try {
+            String jti = provider.getJti(accessTokenHeader);
+            long expMillis = provider.getExpirationMillis(accessTokenHeader);
+            long ttl = expMillis - System.currentTimeMillis();
+            tokenBlacklistService.blacklist(jti, ttl);
+        } catch (Exception ignored) {
+            // 토큰 파싱 실패 시 블랙리스트 등록 생략 (이미 무효한 토큰)
+        }
     }
 
     /**
