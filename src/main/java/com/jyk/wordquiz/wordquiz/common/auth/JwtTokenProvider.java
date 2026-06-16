@@ -87,7 +87,7 @@ public class JwtTokenProvider {
 
     /**
      * Access Token 검증.
-     * 1) Bearer prefix 확인
+     * 1) extractRawToken으로 Bearer prefix 제거 및 형식 검증
      * 2) 서명/만료 검증
      * 3) type=access 검증 (refresh 토큰을 access로 사용하는 것을 차단)
      */
@@ -95,12 +95,7 @@ public class JwtTokenProvider {
         if(token == null) return false;
 
         try {
-            // Bearer
-            if (token.length() < "BEARER ".length()
-                || !token.substring(0, "BEARER ".length()).equalsIgnoreCase("BEARER ")) {
-                return false;
-            }
-            String raw = token.split(" ")[1].trim();
+            String raw = extractRawToken(token);
             Jws<Claims> claims = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(raw);
 
             Claims payload = claims.getPayload();
@@ -129,8 +124,8 @@ public class JwtTokenProvider {
     }
 
     public String getEmail(String token) {
-        token = token.split(" ")[1].trim();
-        Jws<Claims> claimsJwt = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token);
+        String raw = extractRawToken(token);
+        Jws<Claims> claimsJwt = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(raw);
 
         return claimsJwt.getPayload().get("email", String.class);
     }
