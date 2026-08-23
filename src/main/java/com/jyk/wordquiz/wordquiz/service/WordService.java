@@ -155,6 +155,7 @@ public class WordService {
      * @param user: 사용자
      * @throws AccessDeniedException
      */
+    @Transactional
     public void deleteWord(Long wordBookId, Long wordId, User user) throws AccessDeniedException {
         // 단어장 권한 확인
         WordBook wordBook = wordBookRepository.findById(wordBookId)
