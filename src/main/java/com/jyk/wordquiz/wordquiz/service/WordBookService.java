@@ -7,7 +7,7 @@ import com.jyk.wordquiz.wordquiz.model.dto.response.WordBooksResponse;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.model.entity.WordBook;
 import com.jyk.wordquiz.wordquiz.repository.WordBookRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;

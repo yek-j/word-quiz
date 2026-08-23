@@ -13,7 +13,7 @@ import com.jyk.wordquiz.wordquiz.repository.QuizRepository;
 import com.jyk.wordquiz.wordquiz.repository.QuizSessionRepository;
 import com.jyk.wordquiz.wordquiz.repository.QuizTypeRepository;
 import com.jyk.wordquiz.wordquiz.repository.UserConnectionRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;

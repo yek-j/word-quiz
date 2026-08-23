@@ -13,7 +13,7 @@ import com.jyk.wordquiz.wordquiz.repository.QuizSessionRepository;
 import com.jyk.wordquiz.wordquiz.repository.QuizTypeRepository;
 import com.jyk.wordquiz.wordquiz.repository.WordBookRepository;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;

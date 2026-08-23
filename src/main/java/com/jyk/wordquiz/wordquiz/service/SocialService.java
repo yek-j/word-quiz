@@ -13,7 +13,7 @@ import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.model.entity.UserConnection;
 import com.jyk.wordquiz.wordquiz.repository.UserConnectionRepository;
 import com.jyk.wordquiz.wordquiz.repository.UserRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

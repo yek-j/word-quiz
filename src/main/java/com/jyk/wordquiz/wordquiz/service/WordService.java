@@ -14,7 +14,7 @@ import com.jyk.wordquiz.wordquiz.model.entity.Word;
 import com.jyk.wordquiz.wordquiz.model.entity.WordBook;
 import com.jyk.wordquiz.wordquiz.repository.WordBookRepository;
 import com.jyk.wordquiz.wordquiz.repository.WordRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
