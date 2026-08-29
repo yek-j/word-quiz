@@ -27,6 +27,7 @@ import java.util.*;
 
 @Service
 @Slf4j
+@Transactional(readOnly = true)
 public class WordService {
     private final WordRepository wordRepository;
     private final WordBookRepository wordBookRepository;

@@ -28,6 +28,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Service
+@Transactional(readOnly = true)
 public class SocialService {
     @Autowired
     private UserConnectionRepository userConnectionRepository;

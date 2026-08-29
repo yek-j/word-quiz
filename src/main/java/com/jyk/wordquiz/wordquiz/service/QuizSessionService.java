@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
+@Transactional(readOnly = true)
 public class QuizSessionService {
     private final QuizRepository quizRepository;
     private final QuizSessionRepository quizSessionRepository;

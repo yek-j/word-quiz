@@ -22,6 +22,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
+@Transactional(readOnly = true)
 public class AdminService {
     private static final List<AIQuestionService.SampleWord> SAMPLE_WORDS = List.of(
             new AIQuestionService.SampleWord(1L, "apple", "사과 (과일의 한 종류)"),
@@ -314,6 +316,7 @@ public class AdminService {
      * 프롬프트가 구조화된 출력을 내고 정답 단어가 sentence에 노출되지 않는지 검사한다.
      * 저장/수정 자체는 막지 않으며, 프론트가 valid=true인 것만 저장하도록 게이트한다.
      */
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public PromptValidateResponse validatePrompt(String promptContent) {
         AiQuizListResponse sample;
         try {

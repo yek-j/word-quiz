@@ -5,6 +5,7 @@ import com.jyk.wordquiz.wordquiz.model.entity.*;
 import com.jyk.wordquiz.wordquiz.repository.QuizSessionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -13,6 +14,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class AnalysisService {
     @Autowired
     private QuizSessionRepository quizSessionRepository;

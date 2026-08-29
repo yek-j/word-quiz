@@ -9,7 +9,6 @@ import com.jyk.wordquiz.wordquiz.model.entity.WordBook;
 import com.jyk.wordquiz.wordquiz.repository.WordBookRepository;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +19,7 @@ import java.util.List;
 
 @Slf4j
 @Service
+@Transactional(readOnly = true)
 public class WordBookService {
     private final WordBookRepository wordBookRepository;
 

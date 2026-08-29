@@ -107,6 +107,7 @@ public class AuthService {
      * @param user: 사용자
      * @return UserInfoResponse: 사용자 정보
      */
+    @Transactional(readOnly = true)
     public UserInfoResponse getUserInfo(User user){
         return new UserInfoResponse(user.getUsername(), user.getEmail());
     }
