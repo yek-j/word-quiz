@@ -9,6 +9,7 @@ import com.jyk.wordquiz.wordquiz.model.dto.response.QuizResultResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.QuizSessionResponse;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.service.QuizSessionService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -21,7 +22,7 @@ public class QuizSessionController {
     private QuizSessionService sessionService;
 
     @PostMapping
-    public ResponseEntity<?> startQuiz(Authentication authentication, @RequestBody QuizStartRequest quizStartRequest) {
+    public ResponseEntity<?> startQuiz(Authentication authentication, @Valid @RequestBody QuizStartRequest quizStartRequest) {
         User user = AuthUtil.getCurrentUser(authentication);
         QuizSessionResponse result = sessionService.startQuiz(user, quizStartRequest);
 
@@ -31,7 +32,7 @@ public class QuizSessionController {
     @PostMapping("/{sessionId}/answer")
     public ResponseEntity<?> answerQuiz(Authentication authentication,
                                         @PathVariable Long sessionId,
-                                        @RequestBody QuizAnswerRequest quizAnswerReq) {
+                                        @Valid @RequestBody QuizAnswerRequest quizAnswerReq) {
         User user = AuthUtil.getCurrentUser(authentication);
         QuizAnswerResponse result = sessionService.getIsCorrect(user, sessionId, quizAnswerReq);
 

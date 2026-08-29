@@ -8,6 +8,7 @@ import com.jyk.wordquiz.wordquiz.model.dto.response.QuizTypeResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.QuizzesResponse;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.service.QuizService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +25,7 @@ public class QuizController {
     private QuizService quizService;
 
     @PostMapping
-    public ResponseEntity<?> createQuiz(Authentication authentication, @RequestBody QuizParamRequest quizParamRequest) {
+    public ResponseEntity<?> createQuiz(Authentication authentication, @Valid @RequestBody QuizParamRequest quizParamRequest) {
         User user = AuthUtil.getCurrentUser(authentication);
         quizService.createQuiz(user, quizParamRequest);
 
@@ -61,7 +62,7 @@ public class QuizController {
     }
 
     @PutMapping("/{quizId}")
-    public ResponseEntity<?> updateQuiz(Authentication authentication, @PathVariable Long quizId, @RequestBody QuizParamRequest quizParamRequest) {
+    public ResponseEntity<?> updateQuiz(Authentication authentication, @PathVariable Long quizId, @Valid @RequestBody QuizParamRequest quizParamRequest) {
         User user = AuthUtil.getCurrentUser(authentication);
 
         quizService.updateQuiz(user, quizId, quizParamRequest);

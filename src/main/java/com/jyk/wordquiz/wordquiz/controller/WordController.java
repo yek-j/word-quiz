@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -98,7 +99,7 @@ public class WordController {
     @PostMapping
     public ResponseEntity<?> addWord(Authentication authentication,
                                      @Parameter(description = "단어장 ID") @PathVariable Long wordBookId,
-                                     @Parameter(description= "추가할 단어 정보") @RequestBody WordRequest wordReq
+                                     @Parameter(description= "추가할 단어 정보") @Valid @RequestBody WordRequest wordReq
     ) throws AccessDeniedException {
         User user = AuthUtil.getCurrentUser(authentication);
 
@@ -131,7 +132,7 @@ public class WordController {
                                      @Parameter(description = "수정할 단어 ID", example = "10")
                                      @PathVariable Long wordId,
                                      @Parameter(description = "수정할 단어 정보(다른 단어장 이동 가능)")
-                                     @RequestBody UpdateWordRequest updateWordReq) throws AccessDeniedException {
+                                     @Valid @RequestBody UpdateWordRequest updateWordReq) throws AccessDeniedException {
         User user = AuthUtil.getCurrentUser(authentication);
         wordService.updateWord(wordBookId, wordId, updateWordReq, user);
 
@@ -182,7 +183,7 @@ public class WordController {
     @PostMapping("/duplicates")
     public ResponseEntity<?> duplicateCheck(Authentication authentication,
                                             @Parameter(description = "단어장 ID") @PathVariable Long wordBookId,
-                                            @Parameter(description = "중복 체크할 단어") @RequestBody WordCheckRequest wordCheckReq
+                                            @Parameter(description = "중복 체크할 단어") @Valid @RequestBody WordCheckRequest wordCheckReq
     ) throws AccessDeniedException {
         User user = AuthUtil.getCurrentUser(authentication);
 

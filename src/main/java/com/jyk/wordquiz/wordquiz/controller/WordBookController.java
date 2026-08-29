@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -77,7 +78,7 @@ public class WordBookController {
     })
     @PostMapping
     public ResponseEntity<?> addWordBook(Authentication authentication,
-                                         @Parameter(description = "추가할 단어장 정보") @RequestBody WordBookRequest wordBookReq) {
+                                         @Parameter(description = "추가할 단어장 정보") @Valid @RequestBody WordBookRequest wordBookReq) {
         User user = AuthUtil.getCurrentUser(authentication);
         wordBookService.saveWordBook(wordBookReq, user);
 
@@ -96,7 +97,7 @@ public class WordBookController {
     @PutMapping("/{id}")
     public ResponseEntity<?> putWordBook(@Parameter(description = "단어장 ID") @PathVariable Long id,
                                          Authentication authentication,
-                                         @Parameter(description = "수정할 단어장 정보") @RequestBody WordBookRequest wordBookReq) {
+                                         @Parameter(description = "수정할 단어장 정보") @Valid @RequestBody WordBookRequest wordBookReq) {
         User user = AuthUtil.getCurrentUser(authentication);
         wordBookService.updateWordBook(id, wordBookReq, user);
 

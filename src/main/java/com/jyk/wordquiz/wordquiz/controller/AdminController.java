@@ -18,11 +18,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/admin")
@@ -75,7 +75,7 @@ public class AdminController {
     @PostMapping("/quizType")
     public ResponseEntity<?> addQuizType(Authentication authentication,
                                          @Parameter(description = "추가할 퀴즈 타입 데이터")
-                                         @RequestBody QuizTypeRequest quizTypeRequest) {
+                                         @Valid @RequestBody QuizTypeRequest quizTypeRequest) {
         User user = AuthUtil.getCurrentUser(authentication);
         adminService.addQuizType(user, quizTypeRequest);
 
@@ -123,7 +123,7 @@ public class AdminController {
     @PutMapping("/quizType/{quizTypeId}")
     public ResponseEntity<?> updateQuizType(Authentication authentication,
                                             @Parameter(description = "수정할 퀴즈 타입 ID") @PathVariable Long quizTypeId,
-                                            @Parameter(description = "수정할 퀴즈 타입 데이터") @RequestBody QuizTypeRequest quizTypeRequest) {
+                                            @Parameter(description = "수정할 퀴즈 타입 데이터") @Valid @RequestBody QuizTypeRequest quizTypeRequest) {
         User user = AuthUtil.getCurrentUser(authentication);
         adminService.updateQuizType(user, quizTypeId, quizTypeRequest);
 
@@ -164,7 +164,7 @@ public class AdminController {
     @PostMapping("/prompt")
     public ResponseEntity<?> addPrompt(Authentication authentication,
                                        @Parameter(description = "추가할 프롬프트 데이터")
-                                       @RequestBody PromptRequest promptRequest) {
+                                       @Valid @RequestBody PromptRequest promptRequest) {
         User user = AuthUtil.getCurrentUser(authentication);
         adminService.addPrompt(user, promptRequest);
 
@@ -228,7 +228,7 @@ public class AdminController {
     @PutMapping("/prompt/{promptId}")
     public ResponseEntity<?> updatePrompt(Authentication authentication,
                                           @Parameter(description = "수정할 프롬프트 ID") @PathVariable Long promptId,
-                                          @Parameter(description = "수정할 프롬프트 데이터") @RequestBody PromptRequest promptRequest) {
+                                          @Parameter(description = "수정할 프롬프트 데이터") @Valid @RequestBody PromptRequest promptRequest) {
         User user = AuthUtil.getCurrentUser(authentication);
         adminService.updatePrompt(user, promptId, promptRequest);
 

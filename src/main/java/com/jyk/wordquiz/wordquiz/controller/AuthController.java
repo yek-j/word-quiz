@@ -29,14 +29,14 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<?> siginUp(@RequestBody SignupRequest signupReq) {
+    public ResponseEntity<?> siginUp(@Valid @RequestBody SignupRequest signupReq) {
         authService.siginup(signupReq);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponseWrapper.success("회원가입이 성공적으로 완료되었습니다."));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> signIn(@RequestBody LoginRequest loginRequest,
+    public ResponseEntity<?> signIn(@Valid @RequestBody LoginRequest loginRequest,
                                     HttpServletRequest request,
                                     HttpServletResponse response) {
 
@@ -92,7 +92,7 @@ public class AuthController {
     }
 
     @PutMapping("/me")
-    public ResponseEntity<?> updateUserInfo(Authentication authentication, @RequestBody UserInfoRequest userInfoRequest) {
+    public ResponseEntity<?> updateUserInfo(Authentication authentication, @Valid @RequestBody UserInfoRequest userInfoRequest) {
         User user = AuthUtil.getCurrentUser(authentication);
 
         authService.updateUserInfo(user, userInfoRequest);
@@ -101,7 +101,7 @@ public class AuthController {
     }
 
     @PutMapping("/password")
-    public ResponseEntity<?> changePassword(Authentication authentication, @RequestBody ChangePwd changePwd) {
+    public ResponseEntity<?> changePassword(Authentication authentication, @Valid @RequestBody ChangePwd changePwd) {
         User user = AuthUtil.getCurrentUser(authentication);
         authService.changePassword(user, changePwd);
 
