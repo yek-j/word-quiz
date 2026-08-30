@@ -201,6 +201,10 @@ public class QuizSessionService {
         // 퀴즈 세션 가져오기
         QuizSession quizSession = quizSessionRepository.findByIdAndUser(sessionId, user).orElseThrow(() -> new QuizSessionNotFoundException(sessionId));
 
+        if (!quizSession.isQuizActive()) {
+            throw new IllegalArgumentException("이미 종료된 퀴즈 세션입니다.");
+        }
+
         QuizAnswerResponse quizAnswerResponse = new QuizAnswerResponse();
         quizAnswerResponse.setWordId(quizAnswerReq.getWordId());
 
@@ -217,12 +221,10 @@ public class QuizSessionService {
         quizAnswerResponse.setCorrectAnswer(result.get(KEY_ANSWER).toString());
         quizAnswerResponse.setCorrect(correct);
 
-        // 현재 답변한 문제의 순서 확인
-        int currentOrder = Integer.parseInt(result.get(KEY_ORDER).toString());
-        int quizQuestionSize = quizQuestions.size();
-
         // 마지막 퀴즈 답변 완료 시 퀴즈 세션 종료
-        if(currentOrder == quizQuestionSize) {
+        boolean allAnswered =  quizQuestions.stream().allMatch(q -> q.getIsCorrect() != null);
+
+        if (allAnswered) {
             quizSession.setQuizActive(false);
         }
 
@@ -267,6 +269,9 @@ public class QuizSessionService {
 
         for (QuizQuestion q : quizQuestions) {
             if (Objects.equals(q.getWord().getId(), quizAnswerReq.getWordId())) {
+                if (q.getIsCorrect() != null) {
+                    throw new IllegalArgumentException("이미 답변한 문제입니다. wordId="+ quizAnswerReq.getWordId());
+                }
                 if (quizType.getQuizTypeName().equalsIgnoreCase("WORD_TO_MEANING")) {
                     isCorrect = Objects.equals(q.getWord().getDescription(), quizAnswerReq.getAnswer());
                     answerAndCorrect.put(KEY_ANSWER, q.getWord().getDescription());

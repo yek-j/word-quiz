@@ -16,7 +16,7 @@ public class QuizParamRequest {
     private String description;
     @NotBlank
     private String wordBookIds;
-    @NotBlank
+    @NotNull
     private SharingStatus sharingStatus;
     @NotNull
     private List<Long> quizTypeIds; // 퀴즈타입 지정
