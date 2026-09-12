@@ -32,12 +32,14 @@ public class QuizService {
     private final WordBookRepository wordBookRepository;
     private final QuizSessionRepository quizSessionRepository;
     private final QuizTypeRepository quizTypeRepository;
+    private final ConfigService configService;
 
-    public QuizService(QuizRepository quizRepository, WordBookRepository wordBookRepository, QuizSessionRepository quizSessionRepository, QuizTypeRepository quizTypeRepository) {
+    public QuizService(QuizRepository quizRepository, WordBookRepository wordBookRepository, QuizSessionRepository quizSessionRepository, QuizTypeRepository quizTypeRepository, ConfigService configService) {
         this.quizRepository = quizRepository;
         this.wordBookRepository = wordBookRepository;
         this.quizSessionRepository = quizSessionRepository;
         this.quizTypeRepository = quizTypeRepository;
+        this.configService = configService;
     }
 
     /**
@@ -47,6 +49,16 @@ public class QuizService {
      */
     @Transactional
     public void createQuiz(User user, QuizParamRequest quizParamRequest) {
+        Config config = configService.getConfig();
+
+        int quizCount = quizRepository.countByCreatedBy(user);
+
+        if (quizCount >= config.getMaxQuizCount()) {
+            throw new IllegalArgumentException(
+                    "퀴즈는 최대 " + config.getMaxQuizCount() + "개만 생성할 수 있다."
+            );
+        }
+
         // 퀴즈 타입
         if(quizParamRequest.getQuizTypeIds() == null || quizParamRequest.getQuizTypeIds().isEmpty()) {
             throw new IllegalArgumentException("퀴즈 생성을 위해 퀴즈 타입이 필요합니다.");
@@ -54,6 +66,12 @@ public class QuizService {
         
         // 단어장
         List<Long> wordBookIds = parseAndValidateWordBookIds(quizParamRequest.getWordBookIds());
+
+        if(wordBookIds.size() > config.getMaxWordBooksPerQuiz()) {
+            throw new IllegalArgumentException(
+                    "퀴즈에서 사용할 단어장은 최대 " + config.getMaxWordBooksPerQuiz() + "개만 생성할 수 있다."
+            );
+        }
         
         Quiz newQuiz = new Quiz();
         newQuiz.setName(quizParamRequest.getName());
@@ -189,8 +207,15 @@ public class QuizService {
     @Transactional
     public void updateQuiz(User user, Long qid, QuizParamRequest quizParamRequest) {
         List<Long> wordBookIds = parseAndValidateWordBookIds(quizParamRequest.getWordBookIds());
-        
-        
+
+        Config config = configService.getConfig();
+
+        if(wordBookIds.size() > config.getMaxWordBooksPerQuiz()) {
+            throw new IllegalArgumentException(
+                    "퀴즈에서 사용할 단어장은 최대 " + config.getMaxWordBooksPerQuiz() + "개만 생성할 수 있다."
+            );
+        }
+
         // 사용자 본인의 퀴즈만 수정이 가능하다.
         Quiz quiz = quizRepository.findByCreatedByAndId(user, qid).orElseThrow(() -> new QuizNotFoundException(qid));
 

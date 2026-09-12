@@ -12,4 +12,5 @@ import java.util.Optional;
 public interface WordBookRepository extends JpaRepository<WordBook, Long> {
     Page<WordBook> findByCreatedBy(User createdBy, Pageable pageable);
     Optional<WordBook> findByIdAndCreatedBy(Long id, User createdBy);
+    int countByCreatedBy(User user);
 }

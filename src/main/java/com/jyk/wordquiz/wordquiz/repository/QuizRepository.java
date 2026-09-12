@@ -48,4 +48,5 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
                              @Param("searchId") Long searchId,
                              @Param("typeIds") List<Long> typeIds,
                              Pageable pageable);
+    int countByCreatedBy(User user);
 }

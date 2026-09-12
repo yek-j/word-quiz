@@ -39,7 +39,7 @@ public class UploadExcel {
 
             DataFormatter formatter = new DataFormatter();
 
-            for (int i = 1; i < sheet.getLastRowNum(); i++) {
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
                 XSSFRow row = sheet.getRow(i);
                 if (row == null) {
                     continue;

@@ -9,6 +9,7 @@ import com.jyk.wordquiz.wordquiz.model.dto.request.WordRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.WordCheckResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.Words;
 import com.jyk.wordquiz.wordquiz.model.dto.response.WordsResponse;
+import com.jyk.wordquiz.wordquiz.model.entity.Config;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.model.entity.Word;
 import com.jyk.wordquiz.wordquiz.model.entity.WordBook;
@@ -31,10 +32,12 @@ import java.util.*;
 public class WordService {
     private final WordRepository wordRepository;
     private final WordBookRepository wordBookRepository;
+    private final ConfigService configService;
 
-    public WordService(WordRepository wordRepository, WordBookRepository wordBookRepository) {
+    public WordService(WordRepository wordRepository, WordBookRepository wordBookRepository, ConfigService configService) {
         this.wordRepository = wordRepository;
         this.wordBookRepository = wordBookRepository;
+        this.configService = configService;
     }
 
     /**
@@ -85,12 +88,22 @@ public class WordService {
      */
     @Transactional
     public void saveWord(Long wordBookId, WordRequest wordReq, User user) throws AccessDeniedException {
+        Config config = configService.getConfig();
+
         // 단어장
         WordBook wordBook = wordBookRepository.findById(wordBookId)
                 .orElseThrow(() -> new WordBookNotFoundException(wordBookId));
 
         if(!wordBook.getCreatedBy().getId().equals(user.getId())) {
             throw new AccessDeniedException("이 단어장에 대한 접근 권한이 없습니다.");
+        }
+
+        int current = wordRepository.countByWordBook(wordBook);
+
+        if (current + 1 > config.getMaxWordsPerBook()) {
+            throw new IllegalArgumentException(
+                    "단어장은 최대 " + config.getMaxWordsPerBook() + "개의 단어만 저장할 수 있습니다."
+            );
         }
 
         // 중복 검증
@@ -235,6 +248,17 @@ public class WordService {
             newWord.setDescription(words.get(term));
             newWord.setWordBook(wordBook);
             newWords.add(newWord);
+        }
+
+        Config config = configService.getConfig();
+
+        int current = wordRepository.countByWordBook(wordBook);
+        int adding = newWords.size();
+
+        if(current + adding > config.getMaxWordsPerBook()) {
+            throw new IllegalArgumentException(
+                    "단어장은 최대 " + config.getMaxWordsPerBook() + "개의 단어만 저장할 수 있습니다."
+            );
         }
 
         wordRepository.saveAll(newWords);

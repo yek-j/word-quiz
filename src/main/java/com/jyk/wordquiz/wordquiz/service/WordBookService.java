@@ -4,6 +4,7 @@ import com.jyk.wordquiz.wordquiz.common.exception.WordBookNotFoundException;
 import com.jyk.wordquiz.wordquiz.model.dto.request.WordBookRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.WordBooks;
 import com.jyk.wordquiz.wordquiz.model.dto.response.WordBooksResponse;
+import com.jyk.wordquiz.wordquiz.model.entity.Config;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.model.entity.WordBook;
 import com.jyk.wordquiz.wordquiz.repository.WordBookRepository;
@@ -22,9 +23,11 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class WordBookService {
     private final WordBookRepository wordBookRepository;
+    private final ConfigService configService;
 
-    public WordBookService(WordBookRepository wordBookRepository) {
+    public WordBookService(WordBookRepository wordBookRepository, ConfigService configService) {
         this.wordBookRepository = wordBookRepository;
+        this.configService = configService;
     }
 
     /**
@@ -73,6 +76,15 @@ public class WordBookService {
      */
     @Transactional
     public void saveWordBook(WordBookRequest wordBookReq, User user) {
+        Config config = configService.getConfig();
+        int current = wordBookRepository.countByCreatedBy(user);
+
+        if (current >= config.getMaxWordBookCount()) {
+            throw new IllegalArgumentException(
+                    "단어장은 최대 " + config.getMaxWordBookCount() + "개 까지 만들 수 있습니다."
+            );
+        }
+
         WordBook newWordBook = new WordBook();
         newWordBook.setName(wordBookReq.getName());
         newWordBook.setDescription(wordBookReq.getDescription());
