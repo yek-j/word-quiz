@@ -3,6 +3,7 @@ package com.jyk.wordquiz.wordquiz.repository;
 import com.jyk.wordquiz.wordquiz.model.entity.Quiz;
 import com.jyk.wordquiz.wordquiz.model.entity.QuizSession;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -36,6 +37,18 @@ public interface QuizSessionRepository extends JpaRepository<QuizSession, Long> 
             nativeQuery = true)
     int countDistinctWordsByUser(@Param("userId") Long userId);
 
-    List<QuizSession> findByUserAndIsQuizActive(User user, boolean isActive);
+    @Query("""
+        SELECT qs
+        FROM QuizSession qs
+        LEFT JOIN FETCH qs.quizQuestions qq
+        LEFT JOIN FETCH qq.word w
+        LEFT JOIN FETCH w.wordBook
+        WHERE qs.user = :user AND qs.isQuizActive = :isActive
+        """)
+    List<QuizSession> findByUserAndIsQuizActive(@Param("user") User user, @Param("isActive") boolean isActive);
     List<QuizSession> findByUser(User user);
+
+    // QuizSessionRepository
+    @EntityGraph(attributePaths = {"quiz"})
+    List<QuizSession> findWithQuizByUser(User user);
 }

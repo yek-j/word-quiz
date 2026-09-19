@@ -25,7 +25,7 @@ public class AnalysisService {
      * @return
      */
     public QuizAnalysis quizAnalysis(User user) {
-        List<QuizSession> sessions = quizSessionRepository.findByUser(user);
+        List<QuizSession> sessions = quizSessionRepository.findWithQuizByUser(user);
 
         Map<Quiz, List<QuizSession>> quizSessionMap = sessions.stream()
                 .collect(Collectors.groupingBy(QuizSession::getQuiz));
