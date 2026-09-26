@@ -17,8 +17,11 @@ public class LoginLog {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, name = "user_id")
+    @Column(name = "user_id")
     private Long userId;
+
+    @Column(name = "attempted_email")
+    private String attemptedEmail;
 
     @Column(name = "user_agent", columnDefinition = "TEXT")
     private String userAgent;
@@ -29,4 +32,7 @@ public class LoginLog {
     @Column(name = "login_at", nullable = false)
     @CreationTimestamp
     private LocalDateTime loginAt;
+
+    @Column(name = "login_success")
+    private Boolean isSuccess;
 }

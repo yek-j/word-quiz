@@ -6,9 +6,7 @@ import com.jyk.wordquiz.wordquiz.model.dto.request.*;
 import com.jyk.wordquiz.wordquiz.model.dto.response.LoginResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.RefreshTokenResponse;
 import com.jyk.wordquiz.wordquiz.model.dto.response.UserInfoResponse;
-import com.jyk.wordquiz.wordquiz.model.entity.LoginLog;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
-import com.jyk.wordquiz.wordquiz.repository.LoginLogRepository;
 import com.jyk.wordquiz.wordquiz.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,21 +22,24 @@ public class AuthService {
 
     private final RefreshTokenService refreshTokenService;
     private final TokenBlacklistService tokenBlacklistService;
+    private final LoginLogService loginLogService;
+    private final LoginAttemptService loginAttemptService;
     private final UserRepository userRepository;
-    private final LoginLogRepository loginLogRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider provider;
 
     public AuthService(RefreshTokenService refreshTokenService,
                        TokenBlacklistService tokenBlacklistService,
                        UserRepository userRepository,
-                       LoginLogRepository loginLogRepository,
+                       LoginLogService loginLogService,
+                       LoginAttemptService loginAttemptService,
                        PasswordEncoder passwordEncoder,
                        JwtTokenProvider provider) {
         this.refreshTokenService = refreshTokenService;
         this.tokenBlacklistService = tokenBlacklistService;
         this.userRepository = userRepository;
-        this.loginLogRepository = loginLogRepository;
+        this.loginLogService = loginLogService;
+        this.loginAttemptService = loginAttemptService;
         this.passwordEncoder = passwordEncoder;
         this.provider = provider;
     }
@@ -69,30 +70,34 @@ public class AuthService {
      * @param userAgent: UserAgent
      * @return: 로그인 Response
      */
-    @Transactional
     public LoginResponse login(LoginRequest loginReq, String ip, String userAgent){
-        Optional<User> findUser = userRepository.findByEmail(loginReq.getEmail());
+        String email = loginReq.getEmail();
+
+        // 잠금 확인은 비밀번호 검증보다 먼저. 뒤에 두면 잠긴 계정도 추측 시도를 계속 받는다.
+        loginAttemptService.checkBlocked(email);
+
+        Optional<User> findUser = userRepository.findByEmail(email);
 
         if(findUser.isEmpty()) {
+            loginAttemptService.recordFailure(email);
+            loginLogService.save(null, email, userAgent, ip, false);
             throw new BadCredentialsException("로그인에 실패했습니다.");
         }
 
         User user = findUser.get();
         if(!passwordEncoder.matches(loginReq.getPassword(), user.getPassword())) {
+            loginAttemptService.recordFailure(email);
+            loginLogService.save(user.getId(), email, userAgent, ip, false);
             throw new BadCredentialsException("로그인에 실패했습니다.");
         }
+
+        // 성공했으므로 실패 카운터를 비운다.
+        loginAttemptService.reset(email);
 
         String refreshToken = provider.createRefreshToken(user.getId());
         refreshTokenService.refreshTokenSave(user.getId(), refreshToken);
 
-        // 로그인 로그 추가
-        LoginLog loginLog = LoginLog.builder()
-                .userId(user.getId())
-                .userAgent(userAgent)
-                .userClientIp(ip)
-                .build();
-
-        loginLogRepository.save(loginLog);
+        loginLogService.save(user.getId(), email, userAgent, ip, true);
 
         return LoginResponse.builder()
                 .username(user.getUsername())
