@@ -1,5 +1,6 @@
 package com.jyk.wordquiz.wordquiz.service;
 
+import com.jyk.wordquiz.wordquiz.common.exception.ConflictException;
 import com.jyk.wordquiz.wordquiz.common.exception.WordBookNotFoundException;
 import com.jyk.wordquiz.wordquiz.model.dto.request.WordBookRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.WordBooks;
@@ -80,7 +81,7 @@ public class WordBookService {
         int current = wordBookRepository.countByCreatedBy(user);
 
         if (current >= config.getMaxWordBookCount()) {
-            throw new IllegalArgumentException(
+            throw new ConflictException(
                     "단어장은 최대 " + config.getMaxWordBookCount() + "개 까지 만들 수 있습니다."
             );
         }

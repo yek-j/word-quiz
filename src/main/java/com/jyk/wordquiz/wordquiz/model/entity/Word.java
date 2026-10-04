@@ -10,7 +10,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "words")
+@Table(name = "words",
+    uniqueConstraints = @UniqueConstraint(
+            name = "uk_words_wordbook_term",
+            columnNames = {"wordbook_id", "term"}))
 @Getter
 @Setter
 public class Word {

@@ -123,14 +123,14 @@ public class AuthController {
         String refreshToken = authService.getRefreshToken(request);
 
         if (refreshToken == null) {
-            return ResponseEntity.status(401).body(ApiResponseWrapper.fail("Refresh Token이 없습니다."));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponseWrapper.fail("Refresh Token이 없습니다."));
         }
 
         // Refresh Token Rotation: 새 access + 새 refresh 발급
         RefreshTokenResponse rotated = authService.refreshAccessToken(refreshToken);
 
         if (rotated == null) {
-            return ResponseEntity.status(401).body(ApiResponseWrapper.fail("Refresh Token이 유효하지 않습니다."));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponseWrapper.fail("Refresh Token이 유효하지 않습니다."));
         }
 
         // 새 refresh token을 HttpOnly 쿠키로 다시 내려준다

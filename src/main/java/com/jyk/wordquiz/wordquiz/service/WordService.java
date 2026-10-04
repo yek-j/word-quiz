@@ -1,5 +1,6 @@
 package com.jyk.wordquiz.wordquiz.service;
 
+import com.jyk.wordquiz.wordquiz.common.exception.ConflictException;
 import com.jyk.wordquiz.wordquiz.common.exception.DuplicationWordException;
 import com.jyk.wordquiz.wordquiz.common.exception.WordBookNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.exception.WordNotFoundException;
@@ -101,7 +102,7 @@ public class WordService {
         int current = wordRepository.countByWordBook(wordBook);
 
         if (current + 1 > config.getMaxWordsPerBook()) {
-            throw new IllegalArgumentException(
+            throw new ConflictException(
                     "단어장은 최대 " + config.getMaxWordsPerBook() + "개의 단어만 저장할 수 있습니다."
             );
         }
@@ -256,7 +257,7 @@ public class WordService {
         int adding = newWords.size();
 
         if(current + adding > config.getMaxWordsPerBook()) {
-            throw new IllegalArgumentException(
+            throw new ConflictException(
                     "단어장은 최대 " + config.getMaxWordsPerBook() + "개의 단어만 저장할 수 있습니다."
             );
         }

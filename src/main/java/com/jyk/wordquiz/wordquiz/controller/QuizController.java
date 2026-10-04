@@ -11,6 +11,7 @@ import com.jyk.wordquiz.wordquiz.service.QuizService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +30,7 @@ public class QuizController {
         User user = AuthUtil.getCurrentUser(authentication);
         quizService.createQuiz(user, quizParamRequest);
 
-        return ResponseEntity.ok(ApiResponseWrapper.success("퀴즈를 생성했습니다."));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponseWrapper.success("퀴즈를 생성했습니다."));
     }
 
     @GetMapping

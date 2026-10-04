@@ -1,5 +1,6 @@
 package com.jyk.wordquiz.wordquiz.service;
 
+import com.jyk.wordquiz.wordquiz.common.exception.ConflictException;
 import com.jyk.wordquiz.wordquiz.common.exception.UserConnectionNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.exception.UserNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.type.UserConnectionStatus;
@@ -8,7 +9,6 @@ import com.jyk.wordquiz.wordquiz.model.dto.request.FriendRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.Friend;
 import com.jyk.wordquiz.wordquiz.model.dto.response.FriendRequestResult;
 import com.jyk.wordquiz.wordquiz.model.dto.response.FriendsResponse;
-import com.jyk.wordquiz.wordquiz.model.dto.response.UsersResponse;
 import com.jyk.wordquiz.wordquiz.model.entity.User;
 import com.jyk.wordquiz.wordquiz.model.entity.UserConnection;
 import com.jyk.wordquiz.wordquiz.repository.UserConnectionRepository;
@@ -121,7 +121,7 @@ public class SocialService {
                 .orElseThrow(() -> new UserConnectionNotFoundException(user.getId(), friendRequestId));
 
         if(userConnection.getConnectionStatus() != UserConnectionStatus.PENDING) {
-            throw new IllegalArgumentException("수락할 수 없는 상태의 친구 요청입니다.");
+            throw new ConflictException("수락할 수 없는 상태의 친구 요청입니다.");
         }
 
         // 요청받은 사용자를 targetId로 UserConnection 생성

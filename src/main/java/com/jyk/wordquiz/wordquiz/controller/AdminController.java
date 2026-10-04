@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -68,7 +69,7 @@ public class AdminController {
     @Operation(summary = "퀴즈 타입 추가", description = "퀴즈 타입을 추가하는 기능입니다.")
     @ApiResponses(value = {
             @ApiResponse(
-                    responseCode = "200",
+                    responseCode = "201",
                     description = "프롬프트 추가 성공"
             )
     })
@@ -79,7 +80,7 @@ public class AdminController {
         User user = AuthUtil.getCurrentUser(authentication);
         adminService.addQuizType(user, quizTypeRequest);
 
-        return ResponseEntity.ok(ApiResponseWrapper.success("퀴즈 타입 추가 성공입니다."));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponseWrapper.success("퀴즈 타입 추가 성공입니다."));
     }
 
     @Operation(summary = "퀴즈 타입 조회", description = "퀴즈타입 리스트입니다.")
@@ -157,7 +158,7 @@ public class AdminController {
     @Operation(summary = "프롬프트 추가", description = "프롬프트 추가하는 기능입니다.")
     @ApiResponses(value = {
             @ApiResponse(
-                    responseCode = "200",
+                    responseCode = "201",
                     description = "프롬프트 추가 성공"
             )
     })
@@ -168,7 +169,7 @@ public class AdminController {
         User user = AuthUtil.getCurrentUser(authentication);
         adminService.addPrompt(user, promptRequest);
 
-        return ResponseEntity.ok(ApiResponseWrapper.success("프롬프트 추가 성공입니다."));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponseWrapper.success("프롬프트 추가 성공입니다."));
     }
 
     @Operation(summary = "관리자용 프롬프트 조회", description = "프롬프트 리스트입니다.")

@@ -1,5 +1,6 @@
 package com.jyk.wordquiz.wordquiz.service;
 
+import com.jyk.wordquiz.wordquiz.common.exception.ConflictException;
 import com.jyk.wordquiz.wordquiz.common.exception.UserNotFoundException;
 import com.jyk.wordquiz.wordquiz.model.dto.request.ConfigRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.request.PromptRequest;
@@ -167,7 +168,7 @@ public class AdminService {
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 퀴즈 타입입니다. id:" + promptRequest.getPromptTypeId()));
 
         if (promptRepository.existsByPromptType_Id(promptRequest.getPromptTypeId())) {
-            throw new IllegalArgumentException("해당 퀴즈 타입의 프롬프트가 이미 존재합니다. id:" + promptRequest.getPromptTypeId());
+            throw new ConflictException("해당 퀴즈 타입의 프롬프트가 이미 존재합니다. id:" + promptRequest.getPromptTypeId());
         }
 
         if (!quizType.isUseAi()) {
@@ -258,7 +259,7 @@ public class AdminService {
 
         if(quizType.isUseAi() && !quizTypeRequest.isUseAi()
             && promptRepository.existsByPromptType_Id(quizTypeId)) {
-            throw new IllegalArgumentException("연결된 프롬프트가 존재하여 useAi를 false로 변경할 수 없습니다.");
+            throw new ConflictException("연결된 프롬프트가 존재하여 useAi를 false로 변경할 수 없습니다.");
         }
 
         quizType.setQuizTypeName(quizTypeRequest.getQuizTypeName());
@@ -289,7 +290,7 @@ public class AdminService {
         QuizType quizType = quizTypeRepository.findById(promptRequest.getPromptTypeId()).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 퀴즈 타입입니다. id:" + promptRequest.getPromptTypeId()));
 
         if (promptRepository.existsByPromptType_IdAndIdNot(promptRequest.getPromptTypeId(), promptId)) {
-            throw new IllegalArgumentException("해당 퀴즈 타입의 프롬프트가 이미 존재합니다. id:" + promptRequest.getPromptTypeId());
+            throw new ConflictException("해당 퀴즈 타입의 프롬프트가 이미 존재합니다. id:" + promptRequest.getPromptTypeId());
         }
 
         prompt.setPromptName(promptRequest.getPromptName());

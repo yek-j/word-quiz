@@ -1,5 +1,6 @@
 package com.jyk.wordquiz.wordquiz.service;
 
+import com.jyk.wordquiz.wordquiz.common.exception.ConflictException;
 import com.jyk.wordquiz.wordquiz.common.exception.QuizNotFoundException;
 import com.jyk.wordquiz.wordquiz.model.dto.request.QuizParamRequest;
 import com.jyk.wordquiz.wordquiz.model.dto.response.QuizResponse;
@@ -54,7 +55,7 @@ public class QuizService {
         int quizCount = quizRepository.countByCreatedBy(user);
 
         if (quizCount >= config.getMaxQuizCount()) {
-            throw new IllegalArgumentException(
+            throw new ConflictException(
                     "퀴즈는 최대 " + config.getMaxQuizCount() + "개만 생성할 수 있다."
             );
         }

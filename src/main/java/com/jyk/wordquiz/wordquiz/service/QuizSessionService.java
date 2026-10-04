@@ -1,5 +1,6 @@
 package com.jyk.wordquiz.wordquiz.service;
 
+import com.jyk.wordquiz.wordquiz.common.exception.ConflictException;
 import com.jyk.wordquiz.wordquiz.common.exception.QuizNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.exception.QuizSessionNotFoundException;
 import com.jyk.wordquiz.wordquiz.common.type.SharingStatus;
@@ -288,7 +289,7 @@ public class QuizSessionService {
         QuizSession quizSession = quizSessionRepository.findByIdAndUser(sessionId, user).orElseThrow(() -> new QuizSessionNotFoundException(sessionId));
 
         if (!quizSession.isQuizActive()) {
-            throw new IllegalArgumentException("이미 종료된 퀴즈 세션입니다.");
+            throw new ConflictException("이미 종료된 퀴즈 세션입니다.");
         }
 
         QuizAnswerResponse quizAnswerResponse = new QuizAnswerResponse();
@@ -356,7 +357,7 @@ public class QuizSessionService {
         for (QuizQuestion q : quizQuestions) {
             if (Objects.equals(q.getWord().getId(), quizAnswerReq.getWordId())) {
                 if (q.getIsCorrect() != null) {
-                    throw new IllegalArgumentException("이미 답변한 문제입니다. wordId="+ quizAnswerReq.getWordId());
+                    throw new ConflictException("이미 답변한 문제입니다. wordId="+ quizAnswerReq.getWordId());
                 }
                 if (quizType.getQuizTypeName().equalsIgnoreCase("WORD_TO_MEANING")) {
                     isCorrect = Objects.equals(q.getWord().getDescription(), quizAnswerReq.getAnswer());
