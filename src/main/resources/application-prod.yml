@@ -1,0 +1,32 @@
+# 운영 프로파일 — 시크릿을 파일에 두지 않고 전부 환경변수로 주입받는다.
+# 이 파일은 커밋되지만 실제 값은 들어 있지 않다.
+
+spring:
+  jpa:
+    show-sql: false          # 운영에서 SQL 로그는 폭증 원인
+    properties:
+      hibernate:
+        format_sql: false
+
+logging:
+  level:
+    root: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+
+# 운영에서는 API 문서를 외부에 노출하지 않는다
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+# 헬스 체크만 열고 나머지 actuator 엔드포인트는 닫는다
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never

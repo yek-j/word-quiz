@@ -1,0 +1,33 @@
+# application-local.yml 템플릿.
+# 이 파일을 application-local.yml 로 복사한 뒤 실제 값을 채워 넣는다.
+#   cp application-local.yml.example application-local.yml
+#
+# application-local.yml 은 .gitignore 대상이라 커밋되지 않는다.
+
+spring:
+  ai:
+    google:
+      genai:
+        api-key: 여기에_Google_AI_API_키
+
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+jwt:
+  secret:
+    key: 여기에_최소_32자_이상의_JWT_시크릿   # HS256은 256비트(32바이트) 이상 필요
+
+logging:
+  level:
+    root: INFO
+    org.springframework.security: WARN
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    display-request-duration: true

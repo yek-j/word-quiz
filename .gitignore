@@ -36,4 +36,23 @@ out/
 ### VS Code ###
 .vscode/
 
+### 설정 파일 — 기본은 전부 차단(deny), 안전한 것만 명시적으로 허용(allow)
+### 새 yml을 커밋하려면 아래에 ! 로 직접 추가해야 하므로, 실수로 시크릿이 올라가지 않는다.
 *.yml
+*.yaml
+
+# 시크릿이 없는 공통 설정 — ${ENV_VAR} 참조만 있음
+!src/main/resources/application.yml
+!src/main/resources/application-prod.yml
+!src/main/resources/application-local.yml.example
+
+# 인프라 정의 — 시크릿 없음 (값은 .env 에서 주입)
+!docker-compose.yml
+!compose.yml
+
+# CI/CD 워크플로 — 시크릿은 GitHub Secrets에서 주입
+!.github/workflows/*.yml
+
+# 실제 시크릿이 들어가는 파일은 어떤 경우에도 차단
+src/main/resources/application-local.yml
+.env
